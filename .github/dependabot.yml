@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 14
+    groups:
+      "terraform-plugin":
+        patterns:
+          - "github.com/hashicorp/terraform-plugin-*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 14
