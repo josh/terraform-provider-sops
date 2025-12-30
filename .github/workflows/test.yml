@@ -17,8 +17,8 @@ jobs:
       fail-fast: false
       matrix:
         terraform:
-          - "1.13.*"
-          - "1.14.*"
+          - "1.13"
+          - "1.14"
         sops:
           - "3.11.0"
 
@@ -32,7 +32,7 @@ jobs:
 
       - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
-          terraform_version: ${{ matrix.terraform }}
+          terraform_version: ${{ matrix.terraform }}.*
           terraform_wrapper: false
 
       - name: Install SOPS
