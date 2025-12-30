@@ -13,7 +13,6 @@ import (
 )
 
 const testAgePublicKeyResource = "age1j7ce327ke8t905hr4ve97xh4jr5ujauq59nxxkr3tnz9pty78p6q26hnd0"
-const testAgeSecretKeyResource = "AGE-SECRET-KEY-18Z8D6LS5LCAZWERTYMK87NQ0N0ZEX5T50NZ9Q5XVPES2VRPWTC4SYAY5AT"
 
 func testAccEncryptResourcePreCheck(t *testing.T) {
 	testAccPreCheck(t)
@@ -214,10 +213,6 @@ func TestAccEncryptResource_InvalidInputTypes(t *testing.T) {
 
 func testAccEncryptResourceConfigBasic(ageRecipient string) string {
 	return fmt.Sprintf(`
-provider "sops" {
-  age_identity_value = %q
-}
-
 resource "sops_encrypt" "test" {
   input = {
     secret = "my-secret-value"
@@ -225,15 +220,11 @@ resource "sops_encrypt" "test" {
   }
   age = [%q]
 }
-`, testAgeSecretKeyResource, ageRecipient)
+`, ageRecipient)
 }
 
 func testAccEncryptResourceConfigUpdate(value, ageRecipient string) string {
 	return fmt.Sprintf(`
-provider "sops" {
-  age_identity_value = %q
-}
-
 resource "sops_encrypt" "test" {
   input = {
     secret = %q
@@ -241,15 +232,11 @@ resource "sops_encrypt" "test" {
   }
   age = [%q]
 }
-`, testAgeSecretKeyResource, value, ageRecipient)
+`, value, ageRecipient)
 }
 
 func testAccEncryptResourceConfigNested(ageRecipient string) string {
 	return fmt.Sprintf(`
-provider "sops" {
-  age_identity_value = %q
-}
-
 resource "sops_encrypt" "test" {
   input = {
     database = {
@@ -265,69 +252,49 @@ resource "sops_encrypt" "test" {
   }
   age = [%q]
 }
-`, testAgeSecretKeyResource, ageRecipient)
+`, ageRecipient)
 }
 
 func testAccEncryptResourceConfigMultipleRecipients(ageRecipient1, ageRecipient2 string) string {
 	return fmt.Sprintf(`
-provider "sops" {
-  age_identity_value = %q
-}
-
 resource "sops_encrypt" "test" {
   input = {
     multi_recipient_secret = "shared-secret-value"
   }
   age = [%q, %q]
 }
-`, testAgeSecretKeyResource, ageRecipient1, ageRecipient2)
+`, ageRecipient1, ageRecipient2)
 }
 
 func testAccEncryptResourceConfigInvalidArray(ageRecipient string) string {
 	return fmt.Sprintf(`
-provider "sops" {
-  age_identity_value = %q
-}
-
 resource "sops_encrypt" "test" {
   input = ["not", "a", "map"]
   age = [%q]
 }
-`, testAgeSecretKeyResource, ageRecipient)
+`, ageRecipient)
 }
 
 func testAccEncryptResourceConfigInvalidString(ageRecipient string) string {
 	return fmt.Sprintf(`
-provider "sops" {
-  age_identity_value = %q
-}
-
 resource "sops_encrypt" "test" {
   input = "not a map"
   age = [%q]
 }
-`, testAgeSecretKeyResource, ageRecipient)
+`, ageRecipient)
 }
 
 func testAccEncryptResourceConfigInvalidNumber(ageRecipient string) string {
 	return fmt.Sprintf(`
-provider "sops" {
-  age_identity_value = %q
-}
-
 resource "sops_encrypt" "test" {
   input = 42
   age = [%q]
 }
-`, testAgeSecretKeyResource, ageRecipient)
+`, ageRecipient)
 }
 
 func testAccEncryptResourceConfigWithOutputType(ageRecipient, outputType string) string {
 	return fmt.Sprintf(`
-provider "sops" {
-  age_identity_value = %q
-}
-
 resource "sops_encrypt" "test" {
   input = {
     secret = "my-secret-value"
@@ -336,7 +303,7 @@ resource "sops_encrypt" "test" {
   age = [%q]
   output_type = %q
 }
-`, testAgeSecretKeyResource, ageRecipient, outputType)
+`, ageRecipient, outputType)
 }
 
 func TestAccEncryptResource_WriteOnlyBasic(t *testing.T) {
@@ -475,10 +442,6 @@ func TestAccEncryptResource_InputWOVersionWithoutInputWO(t *testing.T) {
 
 func testAccEncryptResourceConfigWriteOnlyBasic(ageRecipient string) string {
 	return fmt.Sprintf(`
-provider "sops" {
-  age_identity_value = %q
-}
-
 resource "sops_encrypt" "test" {
   input_wo = {
     secret = "my-secret-value"
@@ -486,15 +449,11 @@ resource "sops_encrypt" "test" {
   }
   age = [%q]
 }
-`, testAgeSecretKeyResource, ageRecipient)
+`, ageRecipient)
 }
 
 func testAccEncryptResourceConfigBothInputs(ageRecipient string) string {
 	return fmt.Sprintf(`
-provider "sops" {
-  age_identity_value = %q
-}
-
 resource "sops_encrypt" "test" {
   input = {
     secret = "from-input"
@@ -504,42 +463,30 @@ resource "sops_encrypt" "test" {
   }
   age = [%q]
 }
-`, testAgeSecretKeyResource, ageRecipient)
+`, ageRecipient)
 }
 
 func testAccEncryptResourceConfigNoInputs(ageRecipient string) string {
 	return fmt.Sprintf(`
-provider "sops" {
-  age_identity_value = %q
-}
-
 resource "sops_encrypt" "test" {
   age = [%q]
 }
-`, testAgeSecretKeyResource, ageRecipient)
+`, ageRecipient)
 }
 
 func testAccEncryptResourceConfigWriteOnlyValue(value, ageRecipient string) string {
 	return fmt.Sprintf(`
-provider "sops" {
-  age_identity_value = %q
-}
-
 resource "sops_encrypt" "test" {
   input_wo = {
     secret = %q
   }
   age = [%q]
 }
-`, testAgeSecretKeyResource, value, ageRecipient)
+`, value, ageRecipient)
 }
 
 func testAccEncryptResourceConfigWriteOnlyWithVersion(value, version, ageRecipient string) string {
 	return fmt.Sprintf(`
-provider "sops" {
-  age_identity_value = %q
-}
-
 resource "sops_encrypt" "test" {
   input_wo = {
     secret = %q
@@ -547,15 +494,11 @@ resource "sops_encrypt" "test" {
   input_wo_version = %q
   age = [%q]
 }
-`, testAgeSecretKeyResource, value, version, ageRecipient)
+`, value, version, ageRecipient)
 }
 
 func testAccEncryptResourceConfigVersionWithoutWriteOnly(ageRecipient string) string {
 	return fmt.Sprintf(`
-provider "sops" {
-  age_identity_value = %q
-}
-
 resource "sops_encrypt" "test" {
   input = {
     secret = "my-secret"
@@ -563,5 +506,163 @@ resource "sops_encrypt" "test" {
   input_wo_version = "v1"
   age = [%q]
 }
-`, testAgeSecretKeyResource, ageRecipient)
+`, ageRecipient)
+}
+
+func TestAccEncryptResource_UnknownInputWO_FromEphemeral(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEncryptResourceConfigUnknownInputWO(testAgePublicKeyResource),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectUnknownValue(
+							"sops_encrypt.test",
+							tfjsonpath.New("output"),
+						),
+						plancheck.ExpectUnknownValue(
+							"sops_encrypt.test",
+							tfjsonpath.New("input_hash"),
+						),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"sops_encrypt.test",
+						tfjsonpath.New("output"),
+						knownvalue.NotNull(),
+					),
+					statecheck.ExpectKnownValue(
+						"sops_encrypt.test",
+						tfjsonpath.New("input_hash"),
+						knownvalue.NotNull(),
+					),
+					statecheck.ExpectKnownValue(
+						"sops_encrypt.test",
+						tfjsonpath.New("input_wo"),
+						knownvalue.Null(),
+					),
+				},
+			},
+		},
+	})
+}
+
+func testAccEncryptResourceConfigUnknownInputWO(ageRecipient string) string {
+	return fmt.Sprintf(`
+resource "terraform_data" "source" {
+  input = {
+    secret = "my-secret-value"
+    key    = "my-key-data"
+  }
+}
+
+ephemeral "sops_test_dynamic" "test" {
+  value = terraform_data.source.output
+}
+
+resource "sops_encrypt" "test" {
+  input_wo = ephemeral.sops_test_dynamic.test.output
+  age = [%q]
+}
+`, ageRecipient)
+}
+
+func TestAccEncryptResource_UnknownInputWO_WithVersion(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEncryptResourceConfigUnknownInputWOWithVersion(testAgePublicKeyResource, "v1"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectUnknownValue(
+							"sops_encrypt.test",
+							tfjsonpath.New("output"),
+						),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"sops_encrypt.test",
+						tfjsonpath.New("output"),
+						knownvalue.NotNull(),
+					),
+				},
+			},
+		},
+	})
+}
+
+func testAccEncryptResourceConfigUnknownInputWOWithVersion(ageRecipient, version string) string {
+	return fmt.Sprintf(`
+resource "terraform_data" "source" {
+  input = {
+    secret = "my-secret-value"
+  }
+}
+
+ephemeral "sops_test_dynamic" "test" {
+  value = terraform_data.source.output
+}
+
+resource "sops_encrypt" "test" {
+  input_wo = ephemeral.sops_test_dynamic.test.output
+  input_wo_version = %q
+  age = [%q]
+}
+`, version, ageRecipient)
+}
+
+func TestAccEncryptResource_FullUnknownNestedInput(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEncryptResourceConfigFullUnknown(testAgePublicKeyResource),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectUnknownValue(
+							"sops_encrypt.test",
+							tfjsonpath.New("output"),
+						),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"sops_encrypt.test",
+						tfjsonpath.New("output"),
+						knownvalue.NotNull(),
+					),
+				},
+			},
+		},
+	})
+}
+
+func testAccEncryptResourceConfigFullUnknown(ageRecipient string) string {
+	return fmt.Sprintf(`
+resource "terraform_data" "source" {
+  input = {
+    database = {
+      host     = "prod-db.example.com"
+      password = "super-secret-db-password"
+    }
+    api_key = "my-api-key"
+  }
+}
+
+ephemeral "sops_test_dynamic" "test" {
+  value = terraform_data.source.output
+}
+
+resource "sops_encrypt" "test" {
+  input_wo = ephemeral.sops_test_dynamic.test.output
+  age = [%q]
+}
+`, ageRecipient)
 }

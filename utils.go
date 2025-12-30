@@ -221,3 +221,60 @@ func hashDynamicValue(dyn types.Dynamic) (string, error) {
 	hash := sha256.Sum256(jsonBytes)
 	return fmt.Sprintf("%x", hash), nil
 }
+
+func containsUnknownValues(dyn types.Dynamic) bool {
+	if dyn.IsUnknown() {
+		return true
+	}
+
+	if dyn.IsNull() {
+		return false
+	}
+
+	return containsUnknownInAttr(dyn.UnderlyingValue())
+}
+
+func containsUnknownInAttr(val attr.Value) bool {
+	if val.IsUnknown() {
+		return true
+	}
+
+	if val.IsNull() {
+		return false
+	}
+
+	switch v := val.(type) {
+	case types.Object:
+		for _, attrVal := range v.Attributes() {
+			if containsUnknownInAttr(attrVal) {
+				return true
+			}
+		}
+	case types.List:
+		for _, elem := range v.Elements() {
+			if containsUnknownInAttr(elem) {
+				return true
+			}
+		}
+	case types.Map:
+		for _, elem := range v.Elements() {
+			if containsUnknownInAttr(elem) {
+				return true
+			}
+		}
+	case types.Tuple:
+		for _, elem := range v.Elements() {
+			if containsUnknownInAttr(elem) {
+				return true
+			}
+		}
+	case types.Set:
+		for _, elem := range v.Elements() {
+			if containsUnknownInAttr(elem) {
+				return true
+			}
+		}
+	}
+
+	return false
+}

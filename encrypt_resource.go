@@ -129,6 +129,52 @@ func (r *EncryptResource) ConfigValidators(ctx context.Context) []resource.Confi
 	}
 }
 
+func (r *EncryptResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if req.State.Raw.IsNull() {
+		var plan EncryptResourceModel
+		resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		var config EncryptResourceModel
+		resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		hasUnknownInput := false
+
+		if !config.InputWO.IsNull() {
+			if config.InputWO.IsUnknown() {
+				hasUnknownInput = true
+			} else {
+				if containsUnknownValues(config.InputWO) {
+					hasUnknownInput = true
+				}
+			}
+		} else if !config.Input.IsNull() {
+			if config.Input.IsUnknown() {
+				hasUnknownInput = true
+			} else {
+				if containsUnknownValues(config.Input) {
+					hasUnknownInput = true
+				}
+			}
+		}
+
+		if hasUnknownInput {
+			plan.Output = types.StringUnknown()
+
+			if !config.InputWO.IsNull() && config.InputWOVersion.IsNull() {
+				plan.InputHash = types.StringUnknown()
+			}
+
+			resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
+		}
+	}
+}
+
 func (r *EncryptResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data EncryptResourceModel
 

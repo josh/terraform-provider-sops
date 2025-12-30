@@ -72,6 +72,7 @@ func (p *SopsProvider) Resources(ctx context.Context) []func() resource.Resource
 func (p *SopsProvider) EphemeralResources(ctx context.Context) []func() ephemeral.EphemeralResource {
 	return []func() ephemeral.EphemeralResource{
 		NewDecryptEphemeralResource,
+		NewTestDynamicEphemeralResource,
 	}
 }
 
