@@ -9,7 +9,8 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    name: test (terraform ${{ matrix.terraform }}, sops ${{ matrix.sops }})
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     strategy:
@@ -18,6 +19,8 @@ jobs:
         terraform:
           - "1.13.*"
           - "1.14.*"
+        sops:
+          - "3.11.0"
 
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
@@ -31,6 +34,12 @@ jobs:
         with:
           terraform_version: ${{ matrix.terraform }}
           terraform_wrapper: false
+
+      - name: Install SOPS
+        run: |
+          curl -LO https://github.com/getsops/sops/releases/download/v${{ matrix.sops }}/sops-v${{ matrix.sops }}.linux.amd64
+          sudo mv sops-v${{ matrix.sops }}.linux.amd64 /usr/local/bin/sops
+          sudo chmod +x /usr/local/bin/sops
 
       - run: |
           go mod download
