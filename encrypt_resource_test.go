@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 const testAgePublicKeyResource = "age1j7ce327ke8t905hr4ve97xh4jr5ujauq59nxxkr3tnz9pty78p6q26hnd0"
@@ -308,6 +309,9 @@ resource "sops_encrypt" "test" {
 
 func TestAccEncryptResource_WriteOnlyBasic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
 		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -337,6 +341,9 @@ func TestAccEncryptResource_WriteOnlyBasic(t *testing.T) {
 
 func TestAccEncryptResource_MutualExclusivity(t *testing.T) {
 	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
 		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -369,6 +376,9 @@ func TestAccEncryptResource_NoInputsProvided(t *testing.T) {
 
 func TestAccEncryptResource_HashGeneration(t *testing.T) {
 	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
 		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -393,6 +403,9 @@ func TestAccEncryptResource_HashGeneration(t *testing.T) {
 
 func TestAccEncryptResource_VersionTriggerChangeDetection(t *testing.T) {
 	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
 		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -423,6 +436,9 @@ func TestAccEncryptResource_VersionTriggerChangeDetection(t *testing.T) {
 
 func TestAccEncryptResource_InputWOVersionWithoutInputWO(t *testing.T) {
 	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
 		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -511,6 +527,9 @@ resource "sops_encrypt" "test" {
 
 func TestAccEncryptResource_UnknownInputWO_FromEphemeral(t *testing.T) {
 	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
 		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -572,6 +591,9 @@ resource "sops_encrypt" "test" {
 
 func TestAccEncryptResource_UnknownInputWO_WithVersion(t *testing.T) {
 	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
 		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -619,6 +641,9 @@ resource "sops_encrypt" "test" {
 
 func TestAccEncryptResource_FullUnknownNestedInput(t *testing.T) {
 	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
 		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -668,6 +693,9 @@ resource "sops_encrypt" "test" {
 }
 func TestAccEncryptResource_ValidatorMixedKnownUnknown(t *testing.T) {
 	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
 		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -718,6 +746,9 @@ resource "sops_encrypt" "test" {
 
 func TestAccEncryptResource_ValidatorNestedUnknownInMap(t *testing.T) {
 	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
 		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -769,6 +800,9 @@ resource "sops_encrypt" "test" {
 
 func TestAccEncryptResource_ValidatorDeeplyNestedUnknown(t *testing.T) {
 	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
 		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
