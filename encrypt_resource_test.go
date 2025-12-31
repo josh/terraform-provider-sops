@@ -818,3 +818,130 @@ resource "sops_encrypt" "test" {
 }
 `, ageRecipient)
 }
+
+func TestAccEncryptResource_OutputIndent(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEncryptResourceConfigWithOutputIndent(testAgePublicKeyResource, 2),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"sops_encrypt.test",
+						tfjsonpath.New("output"),
+						knownvalue.NotNull(),
+					),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("sops_encrypt.test", "output"),
+					resource.TestCheckResourceAttr("sops_encrypt.test", "output_indent", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEncryptResource_OutputIndentChange_ForcesReplacement(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEncryptResourceConfigWithOutputIndent(testAgePublicKeyResource, 0),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"sops_encrypt.test",
+						tfjsonpath.New("output"),
+						knownvalue.NotNull(),
+					),
+				},
+			},
+			{
+				Config: testAccEncryptResourceConfigWithOutputIndent(testAgePublicKeyResource, 2),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(
+							"sops_encrypt.test",
+							plancheck.ResourceActionReplace,
+						),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccEncryptResource_OutputIndentWithYAML(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEncryptResourceConfigWithOutputTypeAndIndent(testAgePublicKeyResource, "yaml", 4),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"sops_encrypt.test",
+						tfjsonpath.New("output"),
+						knownvalue.NotNull(),
+					),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("sops_encrypt.test", "output"),
+					resource.TestCheckResourceAttr("sops_encrypt.test", "output_type", "yaml"),
+					resource.TestCheckResourceAttr("sops_encrypt.test", "output_indent", "4"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEncryptResource_OutputIndentCompact(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEncryptResourceConfigWithOutputIndent(testAgePublicKeyResource, 0),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"sops_encrypt.test",
+						tfjsonpath.New("output"),
+						knownvalue.NotNull(),
+					),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("sops_encrypt.test", "output"),
+					resource.TestCheckResourceAttr("sops_encrypt.test", "output_indent", "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccEncryptResourceConfigWithOutputIndent(ageRecipient string, indent int) string {
+	return fmt.Sprintf(`
+resource "sops_encrypt" "test" {
+  input = {
+    secret = "my-secret-value"
+    key    = "my-key-data"
+  }
+  age = [%q]
+  output_indent = %d
+}
+`, ageRecipient, indent)
+}
+
+func testAccEncryptResourceConfigWithOutputTypeAndIndent(ageRecipient, outputType string, indent int) string {
+	return fmt.Sprintf(`
+resource "sops_encrypt" "test" {
+  input = {
+    secret = "my-secret-value"
+    key    = "my-key-data"
+  }
+  age = [%q]
+  output_type = %q
+  output_indent = %d
+}
+`, ageRecipient, outputType, indent)
+}

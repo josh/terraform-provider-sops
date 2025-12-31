@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/dynamicplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -33,6 +35,7 @@ type EncryptResourceModel struct {
 	InputHash      types.String  `tfsdk:"input_hash"`
 	Age            types.List    `tfsdk:"age"`
 	OutputType     types.String  `tfsdk:"output_type"`
+	OutputIndent   types.Int64   `tfsdk:"output_indent"`
 	Output         types.String  `tfsdk:"output"`
 }
 
@@ -92,6 +95,16 @@ func (r *EncryptResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Optional:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"output_indent": schema.Int64Attribute{
+				MarkdownDescription: "Number of spaces to indent the encrypted output.",
+				Optional:            true,
+				Validators: []validator.Int64{
+					int64validator.AtLeast(0),
+				},
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
 				},
 			},
 			"output": schema.StringAttribute{
@@ -252,9 +265,16 @@ func (r *EncryptResource) Create(ctx context.Context, req resource.CreateRequest
 		outputType = "json"
 	}
 
+	var outputIndent *int64
+	if !data.OutputIndent.IsNull() && !data.OutputIndent.IsUnknown() {
+		value := data.OutputIndent.ValueInt64()
+		outputIndent = &value
+	}
+
 	encryptedBytes, err := encryptWithSops(ctx, inputMap, SopsEncryptOptions{
 		AgeRecipients: ageRecipients,
 		OutputType:    outputType,
+		OutputIndent:  outputIndent,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(

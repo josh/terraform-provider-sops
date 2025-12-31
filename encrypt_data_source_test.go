@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 
@@ -212,4 +213,80 @@ data "sops_encrypt" "test" {
   output_type = "` + outputType + `"
 }
 `
+}
+
+func TestAccEncryptDataSource_OutputIndent(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEncryptDataSourceConfigWithOutputIndent(testAgeRecipient, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.sops_encrypt.test", "output"),
+					resource.TestCheckResourceAttr("data.sops_encrypt.test", "output_indent", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEncryptDataSource_OutputIndentWithYAML(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEncryptDataSourceConfigWithOutputTypeAndIndent(testAgeRecipient, "yaml", 4),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.sops_encrypt.test", "output"),
+					resource.TestCheckResourceAttr("data.sops_encrypt.test", "output_type", "yaml"),
+					resource.TestCheckResourceAttr("data.sops_encrypt.test", "output_indent", "4"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEncryptDataSource_OutputIndentCompact(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEncryptDataSourceConfigWithOutputIndent(testAgeRecipient, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.sops_encrypt.test", "output"),
+					resource.TestCheckResourceAttr("data.sops_encrypt.test", "output_indent", "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccEncryptDataSourceConfigWithOutputIndent(ageRecipient string, indent int) string {
+	return fmt.Sprintf(`
+data "sops_encrypt" "test" {
+  input = {
+    secret = "value"
+    key    = "data"
+  }
+  age = [%q]
+  output_indent = %d
+}
+`, ageRecipient, indent)
+}
+
+func testAccEncryptDataSourceConfigWithOutputTypeAndIndent(ageRecipient, outputType string, indent int) string {
+	return fmt.Sprintf(`
+data "sops_encrypt" "test" {
+  input = {
+    secret = "value"
+    key    = "data"
+  }
+  age = [%q]
+  output_type = %q
+  output_indent = %d
+}
+`, ageRecipient, outputType, indent)
 }

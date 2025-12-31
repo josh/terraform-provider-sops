@@ -13,6 +13,7 @@ import (
 type SopsEncryptOptions struct {
 	AgeRecipients []string
 	OutputType    string
+	OutputIndent  *int64
 }
 
 func encryptWithSops(ctx context.Context, input map[string]interface{}, opts SopsEncryptOptions) ([]byte, error) {
@@ -30,7 +31,13 @@ func encryptWithSops(ctx context.Context, input map[string]interface{}, opts Sop
 		outputType = "json"
 	}
 
-	args := []string{"encrypt", "--input-type", "json", "--output-type", outputType, "/dev/stdin"}
+	args := []string{}
+
+	if opts.OutputIndent != nil {
+		args = append(args, "--indent", fmt.Sprintf("%d", *opts.OutputIndent))
+	}
+
+	args = append(args, "encrypt", "--input-type", "json", "--output-type", outputType, "/dev/stdin")
 	cmd := exec.CommandContext(ctx, sopsBinary, args...)
 	cmd.Stdin = bytes.NewReader(inputJSON)
 
