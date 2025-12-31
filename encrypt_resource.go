@@ -5,8 +5,6 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/dynamicplanmodifier"
@@ -135,10 +133,10 @@ func (r *EncryptResource) Configure(ctx context.Context, req resource.ConfigureR
 func (r *EncryptResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		encryptResourceValidator{},
-		resourcevalidator.PreferWriteOnlyAttribute(
-			path.MatchRoot("input"),
-			path.MatchRoot("input_wo"),
-		),
+		// resourcevalidator.PreferWriteOnlyAttribute(
+		// 	path.MatchRoot("input"),
+		// 	path.MatchRoot("input_wo"),
+		// ),
 	}
 }
 
