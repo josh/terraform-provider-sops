@@ -83,7 +83,7 @@ data "sops_encrypt" "test" {
     secret = "value"
     key    = "data"
   }
-  age = ["` + ageRecipient + `"]
+  age_recipients = ["` + ageRecipient + `"]
 }
 
 data "sops_decrypt" "test" {
@@ -106,7 +106,7 @@ data "sops_encrypt" "test" {
     }
     api_keys = ["key1", "key2"]
   }
-  age = ["` + ageRecipient + `"]
+  age_recipients = ["` + ageRecipient + `"]
 }
 
 data "sops_decrypt" "test" {
@@ -144,7 +144,7 @@ data "sops_encrypt" "test" {
       }
     }
   }
-  age = ["` + ageRecipient + `"]
+  age_recipients = ["` + ageRecipient + `"]
 }
 
 data "sops_decrypt" "test" {

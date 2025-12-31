@@ -218,7 +218,7 @@ resource "sops_encrypt" "test" {
     secret = "my-secret-value"
     key    = "my-key-data"
   }
-  age = [%q]
+  age_recipients = [%q]
 }
 `, ageRecipient)
 }
@@ -230,7 +230,7 @@ resource "sops_encrypt" "test" {
     secret = %q
     key    = "my-key-data"
   }
-  age = [%q]
+  age_recipients = [%q]
 }
 `, value, ageRecipient)
 }
@@ -250,7 +250,7 @@ resource "sops_encrypt" "test" {
     }
     array_data = ["item1", "item2", "item3"]
   }
-  age = [%q]
+  age_recipients = [%q]
 }
 `, ageRecipient)
 }
@@ -261,7 +261,7 @@ resource "sops_encrypt" "test" {
   input = {
     multi_recipient_secret = "shared-secret-value"
   }
-  age = [%q, %q]
+  age_recipients = [%q, %q]
 }
 `, ageRecipient1, ageRecipient2)
 }
@@ -270,7 +270,7 @@ func testAccEncryptResourceConfigInvalidArray(ageRecipient string) string {
 	return fmt.Sprintf(`
 resource "sops_encrypt" "test" {
   input = ["not", "a", "map"]
-  age = [%q]
+  age_recipients = [%q]
 }
 `, ageRecipient)
 }
@@ -279,7 +279,7 @@ func testAccEncryptResourceConfigInvalidString(ageRecipient string) string {
 	return fmt.Sprintf(`
 resource "sops_encrypt" "test" {
   input = "not a map"
-  age = [%q]
+  age_recipients = [%q]
 }
 `, ageRecipient)
 }
@@ -288,7 +288,7 @@ func testAccEncryptResourceConfigInvalidNumber(ageRecipient string) string {
 	return fmt.Sprintf(`
 resource "sops_encrypt" "test" {
   input = 42
-  age = [%q]
+  age_recipients = [%q]
 }
 `, ageRecipient)
 }
@@ -300,7 +300,7 @@ resource "sops_encrypt" "test" {
     secret = "my-secret-value"
     key    = "my-key-data"
   }
-  age = [%q]
+  age_recipients = [%q]
   output_type = %q
 }
 `, ageRecipient, outputType)
@@ -447,7 +447,7 @@ resource "sops_encrypt" "test" {
     secret = "my-secret-value"
     key    = "my-key-data"
   }
-  age = [%q]
+  age_recipients = [%q]
 }
 `, ageRecipient)
 }
@@ -461,7 +461,7 @@ resource "sops_encrypt" "test" {
   input_wo = {
     secret = "from-input-wo"
   }
-  age = [%q]
+  age_recipients = [%q]
 }
 `, ageRecipient)
 }
@@ -469,7 +469,7 @@ resource "sops_encrypt" "test" {
 func testAccEncryptResourceConfigNoInputs(ageRecipient string) string {
 	return fmt.Sprintf(`
 resource "sops_encrypt" "test" {
-  age = [%q]
+  age_recipients = [%q]
 }
 `, ageRecipient)
 }
@@ -480,7 +480,7 @@ resource "sops_encrypt" "test" {
   input_wo = {
     secret = %q
   }
-  age = [%q]
+  age_recipients = [%q]
 }
 `, value, ageRecipient)
 }
@@ -492,7 +492,7 @@ resource "sops_encrypt" "test" {
     secret = %q
   }
   input_wo_version = %q
-  age = [%q]
+  age_recipients = [%q]
 }
 `, value, version, ageRecipient)
 }
@@ -504,7 +504,7 @@ resource "sops_encrypt" "test" {
     secret = "my-secret"
   }
   input_wo_version = "v1"
-  age = [%q]
+  age_recipients = [%q]
 }
 `, ageRecipient)
 }
@@ -565,7 +565,7 @@ ephemeral "sops_test_dynamic" "test" {
 
 resource "sops_encrypt" "test" {
   input_wo = ephemeral.sops_test_dynamic.test.output
-  age = [%q]
+  age_recipients = [%q]
 }
 `, ageRecipient)
 }
@@ -612,7 +612,7 @@ ephemeral "sops_test_dynamic" "test" {
 resource "sops_encrypt" "test" {
   input_wo = ephemeral.sops_test_dynamic.test.output
   input_wo_version = %q
-  age = [%q]
+  age_recipients = [%q]
 }
 `, version, ageRecipient)
 }
@@ -662,7 +662,7 @@ ephemeral "sops_test_dynamic" "test" {
 
 resource "sops_encrypt" "test" {
   input_wo = ephemeral.sops_test_dynamic.test.output
-  age = [%q]
+  age_recipients = [%q]
 }
 `, ageRecipient)
 }
@@ -711,7 +711,7 @@ resource "sops_encrypt" "test" {
     dynamic_key = ephemeral.sops_test_dynamic.test.output.secret_value
     another_static = "another-value"
   }
-  age = [%q]
+  age_recipients = [%q]
 }
 `, ageRecipient)
 }
@@ -762,7 +762,7 @@ resource "sops_encrypt" "test" {
   input_wo = {
     credentials = ephemeral.sops_test_dynamic.test.output
   }
-  age = [%q]
+  age_recipients = [%q]
 }
 `, ageRecipient)
 }
@@ -814,7 +814,7 @@ resource "sops_encrypt" "test" {
       }
     }
   }
-  age = [%q]
+  age_recipients = [%q]
 }
 `, ageRecipient)
 }
@@ -926,7 +926,7 @@ resource "sops_encrypt" "test" {
     secret = "my-secret-value"
     key    = "my-key-data"
   }
-  age = [%q]
+  age_recipients = [%q]
   output_indent = %d
 }
 `, ageRecipient, indent)
@@ -939,7 +939,7 @@ resource "sops_encrypt" "test" {
     secret = "my-secret-value"
     key    = "my-key-data"
   }
-  age = [%q]
+  age_recipients = [%q]
   output_type = %q
   output_indent = %d
 }

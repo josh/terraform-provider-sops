@@ -105,7 +105,7 @@ data "sops_encrypt" "source" {
     secret = "my-secret-value"
     key    = "my-key-data"
   }
-  age = [%q]
+  age_recipients = [%q]
 }
 
 ephemeral "sops_decrypt" "test" {
@@ -139,7 +139,7 @@ data "sops_encrypt" "source" {
     }
     array_data = ["item1", "item2", "item3"]
   }
-  age = [%q]
+  age_recipients = [%q]
 }
 
 ephemeral "sops_decrypt" "test" {
@@ -168,7 +168,7 @@ data "sops_encrypt" "source" {
       timeout = 30
     }
   }
-  age = [%q]
+  age_recipients = [%q]
 }
 
 ephemeral "sops_decrypt" "test" {

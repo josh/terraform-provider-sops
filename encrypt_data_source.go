@@ -21,7 +21,7 @@ type EncryptDataSource struct{}
 
 type EncryptDataSourceModel struct {
 	Input        types.Dynamic `tfsdk:"input"`
-	Age          types.List    `tfsdk:"age"`
+	Age          types.List    `tfsdk:"age_recipients"`
 	OutputType   types.String  `tfsdk:"output_type"`
 	OutputIndent types.Int64   `tfsdk:"output_indent"`
 	Output       types.String  `tfsdk:"output"`
@@ -43,7 +43,7 @@ func (d *EncryptDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 					dynamicObjectValidator{},
 				},
 			},
-			"age": schema.ListAttribute{
+			"age_recipients": schema.ListAttribute{
 				ElementType:         types.StringType,
 				MarkdownDescription: "List of age recipients to encrypt the data for. Each recipient can decrypt the encrypted output with their corresponding age identity.",
 				Required:            true,

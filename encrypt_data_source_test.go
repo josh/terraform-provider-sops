@@ -114,7 +114,7 @@ data "sops_encrypt" "test" {
     secret = "value"
     key    = "data"
   }
-  age = ["` + ageRecipient + `"]
+  age_recipients = ["` + ageRecipient + `"]
 }
 `
 }
@@ -129,7 +129,7 @@ data "sops_encrypt" "test" {
     }
     api_keys = ["key1", "key2"]
   }
-  age = ["` + ageRecipient + `"]
+  age_recipients = ["` + ageRecipient + `"]
 }
 `
 }
@@ -140,7 +140,7 @@ data "sops_encrypt" "test" {
   input = {
     secret = "multi-recipient-value"
   }
-  age = ["` + ageRecipient1 + `", "` + ageRecipient2 + `"]
+  age_recipients = ["` + ageRecipient1 + `", "` + ageRecipient2 + `"]
 }
 `
 }
@@ -149,7 +149,7 @@ func testAccEncryptDataSourceConfigInvalidArray(ageRecipient string) string {
 	return `
 data "sops_encrypt" "test" {
   input = ["not", "a", "map"]
-  age = ["` + ageRecipient + `"]
+  age_recipients = ["` + ageRecipient + `"]
 }
 `
 }
@@ -158,7 +158,7 @@ func testAccEncryptDataSourceConfigInvalidString(ageRecipient string) string {
 	return `
 data "sops_encrypt" "test" {
   input = "not a map"
-  age = ["` + ageRecipient + `"]
+  age_recipients = ["` + ageRecipient + `"]
 }
 `
 }
@@ -167,7 +167,7 @@ func testAccEncryptDataSourceConfigInvalidNumber(ageRecipient string) string {
 	return `
 data "sops_encrypt" "test" {
   input = 42
-  age = ["` + ageRecipient + `"]
+  age_recipients = ["` + ageRecipient + `"]
 }
 `
 }
@@ -197,7 +197,7 @@ data "sops_encrypt" "test" {
       }
     }
   }
-  age = ["` + ageRecipient + `"]
+  age_recipients = ["` + ageRecipient + `"]
 }
 `
 }
@@ -209,7 +209,7 @@ data "sops_encrypt" "test" {
     secret = "value"
     key    = "data"
   }
-  age = ["` + ageRecipient + `"]
+  age_recipients = ["` + ageRecipient + `"]
   output_type = "` + outputType + `"
 }
 `
@@ -271,7 +271,7 @@ data "sops_encrypt" "test" {
     secret = "value"
     key    = "data"
   }
-  age = [%q]
+  age_recipients = [%q]
   output_indent = %d
 }
 `, ageRecipient, indent)
@@ -284,7 +284,7 @@ data "sops_encrypt" "test" {
     secret = "value"
     key    = "data"
   }
-  age = [%q]
+  age_recipients = [%q]
   output_type = %q
   output_indent = %d
 }

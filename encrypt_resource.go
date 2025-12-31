@@ -33,7 +33,7 @@ type EncryptResourceModel struct {
 	InputWO        types.Dynamic `tfsdk:"input_wo"`
 	InputWOVersion types.String  `tfsdk:"input_wo_version"`
 	InputHash      types.String  `tfsdk:"input_hash"`
-	Age            types.List    `tfsdk:"age"`
+	Age            types.List    `tfsdk:"age_recipients"`
 	OutputType     types.String  `tfsdk:"output_type"`
 	OutputIndent   types.Int64   `tfsdk:"output_indent"`
 	Output         types.String  `tfsdk:"output"`
@@ -82,7 +82,7 @@ func (r *EncryptResource) Schema(ctx context.Context, req resource.SchemaRequest
 				MarkdownDescription: "Hash for automatic change detection with input_wo.",
 				Computed:            true,
 			},
-			"age": schema.ListAttribute{
+			"age_recipients": schema.ListAttribute{
 				ElementType:         types.StringType,
 				MarkdownDescription: "Age recipients for encryption. Each recipient can decrypt the output with their corresponding identity.",
 				Required:            true,
