@@ -37,7 +37,7 @@ func encryptWithSops(ctx context.Context, input map[string]interface{}, opts Sop
 		args = append(args, "--indent", fmt.Sprintf("%d", *opts.OutputIndent))
 	}
 
-	args = append(args, "encrypt", "--input-type", "json", "--output-type", outputType, "/dev/stdin")
+	args = append(args, "--encrypt", "--input-type", "json", "--output-type", outputType, "/dev/stdin")
 	cmd := exec.CommandContext(ctx, sopsBinary, args...)
 	cmd.Stdin = bytes.NewReader(inputJSON)
 

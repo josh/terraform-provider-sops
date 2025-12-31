@@ -3,12 +3,14 @@ package main
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
@@ -17,6 +19,49 @@ const testAgePublicKeyResource = "age1j7ce327ke8t905hr4ve97xh4jr5ujauq59nxxkr3tn
 
 func testAccEncryptResourcePreCheck(t *testing.T) {
 	testAccPreCheck(t)
+}
+
+func testAccCheckEncryptedOutputIndentation(resourceName string, expectedIndent int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		output := rs.Primary.Attributes["output"]
+		if output == "" {
+			return fmt.Errorf("No output attribute found")
+		}
+
+		lines := strings.Split(output, "\n")
+
+		if expectedIndent == 0 {
+			for _, line := range lines {
+				if len(line) > 0 && (line[0] == ' ' || line[0] == '\t') {
+					return fmt.Errorf("Expected compact output with no indentation, but found line starting with whitespace: %q", line)
+				}
+			}
+		} else if expectedIndent > 0 {
+			foundIndentedLine := false
+			expectedPrefix := strings.Repeat(" ", expectedIndent)
+
+			for _, line := range lines {
+				if len(line) > expectedIndent && strings.HasPrefix(line, expectedPrefix) && !strings.HasPrefix(line, expectedPrefix+" ") {
+					foundIndentedLine = true
+					if strings.HasPrefix(line, "\t") {
+						return fmt.Errorf("Expected %d spaces for indentation, but found tab character", expectedIndent)
+					}
+					break
+				}
+			}
+
+			if !foundIndentedLine {
+				return fmt.Errorf("Expected to find lines with %d-space indentation, but didn't find any", expectedIndent)
+			}
+		}
+
+		return nil
+	}
 }
 
 func TestAccEncryptResource_Basic(t *testing.T) {
@@ -870,6 +915,7 @@ func TestAccEncryptResource_OutputIndent(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("sops_encrypt.test", "output"),
 					resource.TestCheckResourceAttr("sops_encrypt.test", "output_indent", "2"),
+					testAccCheckEncryptedOutputIndentation("sops_encrypt.test", 2),
 				),
 			},
 		},
@@ -947,6 +993,7 @@ func TestAccEncryptResource_OutputIndentCompact(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("sops_encrypt.test", "output"),
 					resource.TestCheckResourceAttr("sops_encrypt.test", "output_indent", "0"),
+					testAccCheckEncryptedOutputIndentation("sops_encrypt.test", 0),
 				),
 			},
 		},

@@ -225,6 +225,7 @@ func TestAccEncryptDataSource_OutputIndent(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.sops_encrypt.test", "output"),
 					resource.TestCheckResourceAttr("data.sops_encrypt.test", "output_indent", "2"),
+					testAccCheckEncryptedOutputIndentation("data.sops_encrypt.test", 2),
 				),
 			},
 		},
@@ -258,6 +259,7 @@ func TestAccEncryptDataSource_OutputIndentCompact(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.sops_encrypt.test", "output"),
 					resource.TestCheckResourceAttr("data.sops_encrypt.test", "output_indent", "0"),
+					testAccCheckEncryptedOutputIndentation("data.sops_encrypt.test", 0),
 				),
 			},
 		},
