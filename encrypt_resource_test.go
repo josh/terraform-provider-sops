@@ -666,3 +666,155 @@ resource "sops_encrypt" "test" {
 }
 `, ageRecipient)
 }
+func TestAccEncryptResource_ValidatorMixedKnownUnknown(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEncryptResourceConfigValidatorMixedKnownUnknown(testAgePublicKeyResource),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectUnknownValue(
+							"sops_encrypt.test",
+							tfjsonpath.New("output"),
+						),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"sops_encrypt.test",
+						tfjsonpath.New("output"),
+						knownvalue.NotNull(),
+					),
+				},
+			},
+		},
+	})
+}
+
+func testAccEncryptResourceConfigValidatorMixedKnownUnknown(ageRecipient string) string {
+	return fmt.Sprintf(`
+resource "terraform_data" "source" {
+  input = {
+    secret_value = "my-secret-value"
+  }
+}
+
+ephemeral "sops_test_dynamic" "test" {
+  value = terraform_data.source.output
+}
+
+resource "sops_encrypt" "test" {
+  input_wo = {
+    static_key = "static-value"
+    dynamic_key = ephemeral.sops_test_dynamic.test.output.secret_value
+    another_static = "another-value"
+  }
+  age = [%q]
+}
+`, ageRecipient)
+}
+
+func TestAccEncryptResource_ValidatorNestedUnknownInMap(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEncryptResourceConfigValidatorNestedUnknownInMap(testAgePublicKeyResource),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectUnknownValue(
+							"sops_encrypt.test",
+							tfjsonpath.New("output"),
+						),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"sops_encrypt.test",
+						tfjsonpath.New("output"),
+						knownvalue.NotNull(),
+					),
+				},
+			},
+		},
+	})
+}
+
+func testAccEncryptResourceConfigValidatorNestedUnknownInMap(ageRecipient string) string {
+	return fmt.Sprintf(`
+resource "terraform_data" "source" {
+  input = {
+    config = {
+      database_password = "secret123"
+      api_key = "key456"
+    }
+  }
+}
+
+ephemeral "sops_test_dynamic" "test" {
+  value = terraform_data.source.output.config
+}
+
+resource "sops_encrypt" "test" {
+  input_wo = {
+    credentials = ephemeral.sops_test_dynamic.test.output
+  }
+  age = [%q]
+}
+`, ageRecipient)
+}
+
+func TestAccEncryptResource_ValidatorDeeplyNestedUnknown(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEncryptResourceConfigValidatorDeeplyNestedUnknown(testAgePublicKeyResource),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectUnknownValue(
+							"sops_encrypt.test",
+							tfjsonpath.New("output"),
+						),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"sops_encrypt.test",
+						tfjsonpath.New("output"),
+						knownvalue.NotNull(),
+					),
+				},
+			},
+		},
+	})
+}
+
+func testAccEncryptResourceConfigValidatorDeeplyNestedUnknown(ageRecipient string) string {
+	return fmt.Sprintf(`
+resource "terraform_data" "source" {
+  input = {
+    secret = "my-secret-value"
+  }
+}
+
+ephemeral "sops_test_dynamic" "test" {
+  value = terraform_data.source.output
+}
+
+resource "sops_encrypt" "test" {
+  input_wo = {
+    level1 = {
+      level2 = {
+        level3 = ephemeral.sops_test_dynamic.test.output.secret
+      }
+    }
+  }
+  age = [%q]
+}
+`, ageRecipient)
+}
