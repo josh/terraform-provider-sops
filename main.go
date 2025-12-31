@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	version    string = "0.0.2"
+	version    string = "0.0.3"
 	sopsBinary string = "sops"
 )
 
