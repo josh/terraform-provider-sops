@@ -58,12 +58,18 @@ func encryptWithSops(ctx context.Context, input map[string]interface{}, opts Sop
 type SopsDecryptOptions struct {
 	AgeIdentityPath  string
 	AgeIdentityValue string
+	InputType        string
 }
 
-func decryptWithSops(ctx context.Context, encryptedJSON []byte, opts SopsDecryptOptions) ([]byte, error) {
-	args := []string{"decrypt", "--input-type", "json", "--output-type", "json", "/dev/stdin"}
+func decryptWithSops(ctx context.Context, encryptedData []byte, opts SopsDecryptOptions) ([]byte, error) {
+	inputType := opts.InputType
+	if inputType == "" {
+		inputType = "json"
+	}
+
+	args := []string{"decrypt", "--input-type", inputType, "--output-type", "json", "/dev/stdin"}
 	cmd := exec.CommandContext(ctx, sopsBinary, args...)
-	cmd.Stdin = bytes.NewReader(encryptedJSON)
+	cmd.Stdin = bytes.NewReader(encryptedData)
 
 	cmd.Env = os.Environ()
 	if opts.AgeIdentityValue != "" {

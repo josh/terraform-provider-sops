@@ -20,8 +20,9 @@ type DecryptDataSource struct {
 }
 
 type DecryptDataSourceModel struct {
-	Input  types.Dynamic `tfsdk:"input"`
-	Output types.Dynamic `tfsdk:"output"`
+	Input     types.Dynamic `tfsdk:"input"`
+	InputType types.String  `tfsdk:"input_type"`
+	Output    types.Dynamic `tfsdk:"output"`
 }
 
 func (d *DecryptDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -37,6 +38,10 @@ func (d *DecryptDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 				MarkdownDescription: "The encrypted data structure to decrypt.",
 				Required:            true,
 				Sensitive:           true,
+			},
+			"input_type": schema.StringAttribute{
+				MarkdownDescription: "The format of the encrypted input. Valid values are \"json\" or \"yaml\". Defaults to \"json\".",
+				Optional:            true,
 			},
 			"output": schema.DynamicAttribute{
 				MarkdownDescription: "The decrypted data structure.",
@@ -91,9 +96,18 @@ func (d *DecryptDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		}
 	}
 
+	inputType := "json"
+	if !data.InputType.IsNull() && !data.InputType.IsUnknown() {
+		inputType = data.InputType.ValueString()
+	}
+	if inputType == "" {
+		inputType = "json"
+	}
+
 	decryptedJSON, err := decryptWithSops(ctx, inputBytes, SopsDecryptOptions{
 		AgeIdentityPath:  ageIdentityPath,
 		AgeIdentityValue: ageIdentityValue,
+		InputType:        inputType,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
