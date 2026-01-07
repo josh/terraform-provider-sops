@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	version    string = "0.0.5"
+	version    string = "0.0.6"
 	sopsBinary string = "sops"
 )
 
@@ -25,7 +25,6 @@ func main() {
 	}
 
 	err := providerserver.Serve(context.Background(), New(version), opts)
-
 	if err != nil {
 		log.Fatal(err.Error())
 	}
