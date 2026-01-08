@@ -27,14 +27,11 @@ type EncryptResource struct {
 }
 
 type EncryptResourceModel struct {
-	Input          types.Dynamic `tfsdk:"input"`
-	InputWO        types.Dynamic `tfsdk:"input_wo"`
-	InputWOVersion types.String  `tfsdk:"input_wo_version"`
-	InputHash      types.String  `tfsdk:"input_hash"`
-	Age            types.List    `tfsdk:"age_recipients"`
-	OutputType     types.String  `tfsdk:"output_type"`
-	OutputIndent   types.Int64   `tfsdk:"output_indent"`
-	Output         types.String  `tfsdk:"output"`
+	Input        types.Dynamic `tfsdk:"input"`
+	Age          types.List    `tfsdk:"age_recipients"`
+	OutputType   types.String  `tfsdk:"output_type"`
+	OutputIndent types.Int64   `tfsdk:"output_indent"`
+	Output       types.String  `tfsdk:"output"`
 }
 
 func (r *EncryptResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -48,7 +45,7 @@ func (r *EncryptResource) Schema(ctx context.Context, req resource.SchemaRequest
 		Attributes: map[string]schema.Attribute{
 			"input": schema.DynamicAttribute{
 				MarkdownDescription: "Data structure to encrypt. Must be a map/object with string keys.",
-				Optional:            true,
+				Required:            true,
 				Sensitive:           true,
 				Validators: []validator.Dynamic{
 					dynamicObjectValidator{},
@@ -56,29 +53,6 @@ func (r *EncryptResource) Schema(ctx context.Context, req resource.SchemaRequest
 				PlanModifiers: []planmodifier.Dynamic{
 					dynamicplanmodifier.RequiresReplace(),
 				},
-			},
-			"input_wo": schema.DynamicAttribute{
-				MarkdownDescription: "Write-only data structure to encrypt. Plaintext is not stored in state. Must be a map/object with string keys.",
-				Optional:            true,
-				Sensitive:           true,
-				WriteOnly:           true,
-				Validators: []validator.Dynamic{
-					dynamicObjectValidator{},
-				},
-				PlanModifiers: []planmodifier.Dynamic{
-					dynamicplanmodifier.RequiresReplace(),
-				},
-			},
-			"input_wo_version": schema.StringAttribute{
-				MarkdownDescription: "Version string to trigger re-encryption when using input_wo.",
-				Optional:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"input_hash": schema.StringAttribute{
-				MarkdownDescription: "Hash for automatic change detection with input_wo.",
-				Computed:            true,
 			},
 			"age_recipients": schema.ListAttribute{
 				ElementType:         types.StringType,
@@ -131,59 +105,7 @@ func (r *EncryptResource) Configure(ctx context.Context, req resource.ConfigureR
 }
 
 func (r *EncryptResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
-	return []resource.ConfigValidator{
-		encryptResourceValidator{},
-		// resourcevalidator.PreferWriteOnlyAttribute(
-		// 	path.MatchRoot("input"),
-		// 	path.MatchRoot("input_wo"),
-		// ),
-	}
-}
-
-func (r *EncryptResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	if req.State.Raw.IsNull() {
-		var plan EncryptResourceModel
-		resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		var config EncryptResourceModel
-		resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		hasUnknownInput := false
-
-		if !config.InputWO.IsNull() {
-			if config.InputWO.IsUnknown() {
-				hasUnknownInput = true
-			} else {
-				if containsUnknownValues(config.InputWO) {
-					hasUnknownInput = true
-				}
-			}
-		} else if !config.Input.IsNull() {
-			if config.Input.IsUnknown() {
-				hasUnknownInput = true
-			} else {
-				if containsUnknownValues(config.Input) {
-					hasUnknownInput = true
-				}
-			}
-		}
-
-		if hasUnknownInput {
-			plan.Output = types.StringUnknown()
-
-			if !config.InputWO.IsNull() && config.InputWOVersion.IsNull() {
-				plan.InputHash = types.StringUnknown()
-			}
-
-			resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
-		}
-	}
+	return []resource.ConfigValidator{}
 }
 
 func (r *EncryptResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -194,57 +116,13 @@ func (r *EncryptResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	var configData EncryptResourceModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &configData)...)
-	if resp.Diagnostics.HasError() {
+	inputValue, err := convertDynamicValueToGo(data.Input)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Value Conversion Failed",
+			fmt.Sprintf("Failed to convert input to Go value: %s", err),
+		)
 		return
-	}
-
-	var inputValue interface{}
-	var err error
-
-	if !configData.InputWO.IsNull() {
-		inputValue, err = convertDynamicValueToGo(configData.InputWO)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Value Conversion Failed",
-				fmt.Sprintf("Failed to convert input_wo to Go value: %s", err),
-			)
-			return
-		}
-
-		if !configData.InputWOVersion.IsNull() {
-			data.InputHash = types.StringNull()
-		} else {
-			hash, err := hashDynamicValue(configData.InputWO)
-			if err != nil {
-				resp.Diagnostics.AddError(
-					"Hash Generation Failed",
-					fmt.Sprintf("Failed to generate hash for change detection: %s", err),
-				)
-				return
-			}
-			data.InputHash = types.StringValue(hash)
-		}
-	} else {
-		if data.Input.IsNull() {
-			resp.Diagnostics.AddError(
-				"Missing Input",
-				"Either 'input' or 'input_wo' must be provided.",
-			)
-			return
-		}
-
-		inputValue, err = convertDynamicValueToGo(data.Input)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Value Conversion Failed",
-				fmt.Sprintf("Failed to convert input to Go value: %s", err),
-			)
-			return
-		}
-
-		data.InputHash = types.StringNull()
 	}
 
 	inputMap := inputValue.(map[string]interface{})
