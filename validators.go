@@ -22,6 +22,10 @@ func (v dynamicObjectValidator) ValidateDynamic(ctx context.Context, req validat
 		return
 	}
 
+	if containsUnknownValues(req.ConfigValue) {
+		return
+	}
+
 	inputValue, err := convertDynamicValueToGo(req.ConfigValue)
 	if err != nil {
 		resp.Diagnostics.AddAttributeError(

@@ -351,6 +351,49 @@ resource "sops_encrypt" "test" {
 `, ageRecipient, outputType)
 }
 
+func TestAccEncryptResource_UnknownInput_FromResource(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEncryptResourceConfigUnknownInput(testAgePublicKeyResource),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectUnknownValue(
+							"sops_encrypt.test",
+							tfjsonpath.New("output"),
+						),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"sops_encrypt.test",
+						tfjsonpath.New("output"),
+						knownvalue.NotNull(),
+					),
+				},
+			},
+		},
+	})
+}
+
+func testAccEncryptResourceConfigUnknownInput(ageRecipient string) string {
+	return fmt.Sprintf(`
+resource "terraform_data" "source" {
+  input = {
+    secret = "my-secret-value"
+    key    = "my-key-data"
+  }
+}
+
+resource "sops_encrypt" "test" {
+  input = terraform_data.source.output
+  age_recipients = [%q]
+}
+`, ageRecipient)
+}
+
 func TestAccEncryptResource_OutputIndent(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
