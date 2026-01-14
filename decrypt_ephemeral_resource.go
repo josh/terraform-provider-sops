@@ -21,8 +21,9 @@ type DecryptEphemeralResource struct {
 }
 
 type DecryptEphemeralResourceModel struct {
-	Input  types.Dynamic `tfsdk:"input"`
-	Output types.Dynamic `tfsdk:"output"`
+	Input     types.Dynamic `tfsdk:"input"`
+	InputType types.String  `tfsdk:"input_type"`
+	Output    types.Dynamic `tfsdk:"output"`
 }
 
 func (r *DecryptEphemeralResource) Metadata(_ context.Context, req ephemeral.MetadataRequest, resp *ephemeral.MetadataResponse) {
@@ -38,6 +39,10 @@ func (r *DecryptEphemeralResource) Schema(_ context.Context, _ ephemeral.SchemaR
 				MarkdownDescription: "The encrypted data structure to decrypt.",
 				Required:            true,
 				Sensitive:           true,
+			},
+			"input_type": schema.StringAttribute{
+				MarkdownDescription: "The format of the encrypted input. Valid values are \"json\" or \"yaml\". Defaults to \"json\".",
+				Optional:            true,
 			},
 			"output": schema.DynamicAttribute{
 				MarkdownDescription: "The decrypted data structure.",
@@ -98,9 +103,18 @@ func (r *DecryptEphemeralResource) Open(ctx context.Context, req ephemeral.OpenR
 		ageIdentityValue = r.client.AgeIdentityValue.ValueString()
 	}
 
+	inputType := "json"
+	if !data.InputType.IsNull() && !data.InputType.IsUnknown() {
+		inputType = data.InputType.ValueString()
+	}
+	if inputType == "" {
+		inputType = "json"
+	}
+
 	decryptedJSON, err := decryptWithSops(ctx, inputBytes, SopsDecryptOptions{
 		AgeIdentityPath:  ageIdentityPath,
 		AgeIdentityValue: ageIdentityValue,
+		InputType:        inputType,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(

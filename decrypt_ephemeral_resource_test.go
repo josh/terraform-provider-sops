@@ -182,3 +182,51 @@ provider "echo" {
 resource "echo" "test" {}
 `, testAgeSecretKeyEphemeral, ageRecipient)
 }
+
+func TestAccDecryptEphemeralResource_InputType(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_10_0),
+		},
+		PreCheck:                 func() { testAccDecryptEphemeralPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactoriesWithEcho,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDecryptEphemeralResourceConfigInputType(testAgePublicKeyEphemeral),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"echo.test",
+						tfjsonpath.New("data").AtMapKey("foo"),
+						knownvalue.StringExact("bar"),
+					),
+				},
+			},
+		},
+	})
+}
+
+func testAccDecryptEphemeralResourceConfigInputType(ageRecipient string) string {
+	return fmt.Sprintf(`
+provider "sops" {
+  age_identity_value = %q
+}
+
+data "sops_encrypt" "source" {
+  input = {
+    foo = "bar"
+  }
+  age_recipients = [%q]
+}
+
+ephemeral "sops_decrypt" "test" {
+  input      = data.sops_encrypt.source.output
+  input_type = "json"
+}
+
+provider "echo" {
+  data = ephemeral.sops_decrypt.test.output
+}
+
+resource "echo" "test" {}
+`, testAgeSecretKeyEphemeral, ageRecipient)
+}
