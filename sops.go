@@ -11,9 +11,13 @@ import (
 )
 
 type SopsEncryptOptions struct {
-	AgeRecipients []string
-	OutputType    string
-	OutputIndent  *int64
+	AgeRecipients     []string
+	OutputType        string
+	OutputIndent      *int64
+	UnencryptedSuffix *string
+	EncryptedSuffix   *string
+	UnencryptedRegex  *string
+	EncryptedRegex    *string
 }
 
 func encryptWithSops(ctx context.Context, input map[string]interface{}, opts SopsEncryptOptions) ([]byte, error) {
@@ -35,6 +39,22 @@ func encryptWithSops(ctx context.Context, input map[string]interface{}, opts Sop
 
 	if opts.OutputIndent != nil {
 		args = append(args, "--indent", fmt.Sprintf("%d", *opts.OutputIndent))
+	}
+
+	if opts.UnencryptedSuffix != nil {
+		args = append(args, "--unencrypted-suffix", *opts.UnencryptedSuffix)
+	}
+
+	if opts.EncryptedSuffix != nil {
+		args = append(args, "--encrypted-suffix", *opts.EncryptedSuffix)
+	}
+
+	if opts.UnencryptedRegex != nil {
+		args = append(args, "--unencrypted-regex", *opts.UnencryptedRegex)
+	}
+
+	if opts.EncryptedRegex != nil {
+		args = append(args, "--encrypted-regex", *opts.EncryptedRegex)
 	}
 
 	args = append(args, "--encrypt", "--input-type", "json", "--output-type", outputType, "/dev/stdin")

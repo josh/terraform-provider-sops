@@ -292,3 +292,118 @@ data "sops_encrypt" "test" {
 }
 `, ageRecipient, outputType, indent)
 }
+func TestAccEncryptDataSource_UnencryptedSuffix(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEncryptDataSourceConfigWithUnencryptedSuffix(testAgeRecipient, "_unencrypted"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.sops_encrypt.test", "output"),
+					resource.TestCheckResourceAttr("data.sops_encrypt.test", "unencrypted_suffix", "_unencrypted"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEncryptDataSource_EncryptedSuffix(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEncryptDataSourceConfigWithEncryptedSuffix(testAgeRecipient, "_secret"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.sops_encrypt.test", "output"),
+					resource.TestCheckResourceAttr("data.sops_encrypt.test", "encrypted_suffix", "_secret"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEncryptDataSource_UnencryptedRegex(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEncryptDataSourceConfigWithUnencryptedRegex(testAgeRecipient, "^public_"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.sops_encrypt.test", "output"),
+					resource.TestCheckResourceAttr("data.sops_encrypt.test", "unencrypted_regex", "^public_"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEncryptDataSource_EncryptedRegex(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEncryptDataSourceConfigWithEncryptedRegex(testAgeRecipient, "^secret_"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.sops_encrypt.test", "output"),
+					resource.TestCheckResourceAttr("data.sops_encrypt.test", "encrypted_regex", "^secret_"),
+				),
+			},
+		},
+	})
+}
+
+func testAccEncryptDataSourceConfigWithUnencryptedSuffix(ageRecipient, suffix string) string {
+	return fmt.Sprintf(`
+data "sops_encrypt" "test" {
+  input = {
+    secret          = "encrypted-value"
+    public_unencrypted = "unencrypted-value"
+  }
+  age_recipients = [%q]
+  unencrypted_suffix = %q
+}
+`, ageRecipient, suffix)
+}
+
+func testAccEncryptDataSourceConfigWithEncryptedSuffix(ageRecipient, suffix string) string {
+	return fmt.Sprintf(`
+data "sops_encrypt" "test" {
+  input = {
+    password_secret = "encrypted-value"
+    username        = "plain-value"
+  }
+  age_recipients = [%q]
+  encrypted_suffix = %q
+}
+`, ageRecipient, suffix)
+}
+
+func testAccEncryptDataSourceConfigWithUnencryptedRegex(ageRecipient, regex string) string {
+	return fmt.Sprintf(`
+data "sops_encrypt" "test" {
+  input = {
+    public_key    = "unencrypted-value"
+    secret_token  = "encrypted-value"
+  }
+  age_recipients = [%q]
+  unencrypted_regex = %q
+}
+`, ageRecipient, regex)
+}
+
+func testAccEncryptDataSourceConfigWithEncryptedRegex(ageRecipient, regex string) string {
+	return fmt.Sprintf(`
+data "sops_encrypt" "test" {
+  input = {
+    secret_password = "encrypted-value"
+    username        = "plain-value"
+  }
+  age_recipients = [%q]
+  encrypted_regex = %q
+}
+`, ageRecipient, regex)
+}

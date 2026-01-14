@@ -20,11 +20,15 @@ func NewEncryptDataSource() datasource.DataSource {
 type EncryptDataSource struct{}
 
 type EncryptDataSourceModel struct {
-	Input        types.Dynamic `tfsdk:"input"`
-	Age          types.List    `tfsdk:"age_recipients"`
-	OutputType   types.String  `tfsdk:"output_type"`
-	OutputIndent types.Int64   `tfsdk:"output_indent"`
-	Output       types.String  `tfsdk:"output"`
+	Input             types.Dynamic `tfsdk:"input"`
+	Age               types.List    `tfsdk:"age_recipients"`
+	OutputType        types.String  `tfsdk:"output_type"`
+	OutputIndent      types.Int64   `tfsdk:"output_indent"`
+	UnencryptedSuffix types.String  `tfsdk:"unencrypted_suffix"`
+	EncryptedSuffix   types.String  `tfsdk:"encrypted_suffix"`
+	UnencryptedRegex  types.String  `tfsdk:"unencrypted_regex"`
+	EncryptedRegex    types.String  `tfsdk:"encrypted_regex"`
+	Output            types.String  `tfsdk:"output"`
 }
 
 func (d *EncryptDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -58,6 +62,22 @@ func (d *EncryptDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 				Validators: []validator.Int64{
 					int64validator.AtLeast(0),
 				},
+			},
+			"unencrypted_suffix": schema.StringAttribute{
+				MarkdownDescription: "Override the unencrypted key suffix. Keys with this suffix will not be encrypted.",
+				Optional:            true,
+			},
+			"encrypted_suffix": schema.StringAttribute{
+				MarkdownDescription: "Override the encrypted key suffix. When set, only keys with this suffix will be encrypted.",
+				Optional:            true,
+			},
+			"unencrypted_regex": schema.StringAttribute{
+				MarkdownDescription: "Set the unencrypted key regex. When specified, only keys matching this regex will be left unencrypted.",
+				Optional:            true,
+			},
+			"encrypted_regex": schema.StringAttribute{
+				MarkdownDescription: "Set the encrypted key regex. When specified, only keys matching this regex will be encrypted.",
+				Optional:            true,
 			},
 			"output": schema.StringAttribute{
 				MarkdownDescription: "The encrypted data as a raw string (JSON or YAML serialized). Contains the original structure with encrypted values (ENC[...]) and SOPS metadata. Use `jsondecode()` or `yamldecode()` to parse the output string.",
@@ -106,10 +126,38 @@ func (d *EncryptDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		outputIndent = &value
 	}
 
+	var unencryptedSuffix *string
+	if !data.UnencryptedSuffix.IsNull() && !data.UnencryptedSuffix.IsUnknown() {
+		value := data.UnencryptedSuffix.ValueString()
+		unencryptedSuffix = &value
+	}
+
+	var encryptedSuffix *string
+	if !data.EncryptedSuffix.IsNull() && !data.EncryptedSuffix.IsUnknown() {
+		value := data.EncryptedSuffix.ValueString()
+		encryptedSuffix = &value
+	}
+
+	var unencryptedRegex *string
+	if !data.UnencryptedRegex.IsNull() && !data.UnencryptedRegex.IsUnknown() {
+		value := data.UnencryptedRegex.ValueString()
+		unencryptedRegex = &value
+	}
+
+	var encryptedRegex *string
+	if !data.EncryptedRegex.IsNull() && !data.EncryptedRegex.IsUnknown() {
+		value := data.EncryptedRegex.ValueString()
+		encryptedRegex = &value
+	}
+
 	encryptedBytes, err := encryptWithSops(ctx, inputMap, SopsEncryptOptions{
-		AgeRecipients: ageRecipients,
-		OutputType:    outputType,
-		OutputIndent:  outputIndent,
+		AgeRecipients:     ageRecipients,
+		OutputType:        outputType,
+		OutputIndent:      outputIndent,
+		UnencryptedSuffix: unencryptedSuffix,
+		EncryptedSuffix:   encryptedSuffix,
+		UnencryptedRegex:  unencryptedRegex,
+		EncryptedRegex:    encryptedRegex,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(

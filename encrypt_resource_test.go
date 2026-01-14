@@ -522,3 +522,111 @@ resource "sops_encrypt" "test" {
 }
 `, ageRecipient, outputType, indent)
 }
+func TestAccEncryptResource_UnencryptedSuffix(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEncryptResourceConfigWithUnencryptedSuffix(testAgePublicKeyResource, "_unencrypted"),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"sops_encrypt.test",
+						tfjsonpath.New("output"),
+						knownvalue.NotNull(),
+					),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("sops_encrypt.test", "output"),
+					resource.TestCheckResourceAttr("sops_encrypt.test", "unencrypted_suffix", "_unencrypted"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEncryptResource_SuffixChange_ForcesReplacement(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEncryptResourceConfigWithUnencryptedSuffix(testAgePublicKeyResource, "_unencrypted"),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"sops_encrypt.test",
+						tfjsonpath.New("output"),
+						knownvalue.NotNull(),
+					),
+				},
+			},
+			{
+				Config: testAccEncryptResourceConfigWithUnencryptedSuffix(testAgePublicKeyResource, "_plain"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(
+							"sops_encrypt.test",
+							plancheck.ResourceActionReplace,
+						),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccEncryptResource_RegexChange_ForcesReplacement(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEncryptResourceConfigWithEncryptedRegex(testAgePublicKeyResource, "^secret_"),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"sops_encrypt.test",
+						tfjsonpath.New("output"),
+						knownvalue.NotNull(),
+					),
+				},
+			},
+			{
+				Config: testAccEncryptResourceConfigWithEncryptedRegex(testAgePublicKeyResource, "^password_"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(
+							"sops_encrypt.test",
+							plancheck.ResourceActionReplace,
+						),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccEncryptResourceConfigWithUnencryptedSuffix(ageRecipient, suffix string) string {
+	return fmt.Sprintf(`
+resource "sops_encrypt" "test" {
+  input = {
+    secret          = "encrypted-value"
+    public_unencrypted = "unencrypted-value"
+  }
+  age_recipients = [%q]
+  unencrypted_suffix = %q
+}
+`, ageRecipient, suffix)
+}
+
+func testAccEncryptResourceConfigWithEncryptedRegex(ageRecipient, regex string) string {
+	return fmt.Sprintf(`
+resource "sops_encrypt" "test" {
+  input = {
+    secret_password = "encrypted-value"
+    username        = "plain-value"
+  }
+  age_recipients = [%q]
+  encrypted_regex = %q
+}
+`, ageRecipient, regex)
+}

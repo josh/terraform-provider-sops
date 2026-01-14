@@ -27,11 +27,15 @@ type EncryptResource struct {
 }
 
 type EncryptResourceModel struct {
-	Input        types.Dynamic `tfsdk:"input"`
-	Age          types.List    `tfsdk:"age_recipients"`
-	OutputType   types.String  `tfsdk:"output_type"`
-	OutputIndent types.Int64   `tfsdk:"output_indent"`
-	Output       types.String  `tfsdk:"output"`
+	Input             types.Dynamic `tfsdk:"input"`
+	Age               types.List    `tfsdk:"age_recipients"`
+	OutputType        types.String  `tfsdk:"output_type"`
+	OutputIndent      types.Int64   `tfsdk:"output_indent"`
+	UnencryptedSuffix types.String  `tfsdk:"unencrypted_suffix"`
+	EncryptedSuffix   types.String  `tfsdk:"encrypted_suffix"`
+	UnencryptedRegex  types.String  `tfsdk:"unencrypted_regex"`
+	EncryptedRegex    types.String  `tfsdk:"encrypted_regex"`
+	Output            types.String  `tfsdk:"output"`
 }
 
 func (r *EncryptResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -77,6 +81,34 @@ func (r *EncryptResource) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
+				},
+			},
+			"unencrypted_suffix": schema.StringAttribute{
+				MarkdownDescription: "Override the unencrypted key suffix. Keys with this suffix will not be encrypted.",
+				Optional:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"encrypted_suffix": schema.StringAttribute{
+				MarkdownDescription: "Override the encrypted key suffix. When set, only keys with this suffix will be encrypted.",
+				Optional:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"unencrypted_regex": schema.StringAttribute{
+				MarkdownDescription: "Set the unencrypted key regex. When specified, only keys matching this regex will be left unencrypted.",
+				Optional:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"encrypted_regex": schema.StringAttribute{
+				MarkdownDescription: "Set the encrypted key regex. When specified, only keys matching this regex will be encrypted.",
+				Optional:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"output": schema.StringAttribute{
@@ -179,10 +211,38 @@ func (r *EncryptResource) Create(ctx context.Context, req resource.CreateRequest
 		outputIndent = &value
 	}
 
+	var unencryptedSuffix *string
+	if !data.UnencryptedSuffix.IsNull() && !data.UnencryptedSuffix.IsUnknown() {
+		value := data.UnencryptedSuffix.ValueString()
+		unencryptedSuffix = &value
+	}
+
+	var encryptedSuffix *string
+	if !data.EncryptedSuffix.IsNull() && !data.EncryptedSuffix.IsUnknown() {
+		value := data.EncryptedSuffix.ValueString()
+		encryptedSuffix = &value
+	}
+
+	var unencryptedRegex *string
+	if !data.UnencryptedRegex.IsNull() && !data.UnencryptedRegex.IsUnknown() {
+		value := data.UnencryptedRegex.ValueString()
+		unencryptedRegex = &value
+	}
+
+	var encryptedRegex *string
+	if !data.EncryptedRegex.IsNull() && !data.EncryptedRegex.IsUnknown() {
+		value := data.EncryptedRegex.ValueString()
+		encryptedRegex = &value
+	}
+
 	encryptedBytes, err := encryptWithSops(ctx, inputMap, SopsEncryptOptions{
-		AgeRecipients: ageRecipients,
-		OutputType:    outputType,
-		OutputIndent:  outputIndent,
+		AgeRecipients:     ageRecipients,
+		OutputType:        outputType,
+		OutputIndent:      outputIndent,
+		UnencryptedSuffix: unencryptedSuffix,
+		EncryptedSuffix:   encryptedSuffix,
+		UnencryptedRegex:  unencryptedRegex,
+		EncryptedRegex:    encryptedRegex,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
