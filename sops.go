@@ -35,7 +35,7 @@ func encryptWithSops(ctx context.Context, input map[string]interface{}, opts Sop
 		outputType = "json"
 	}
 
-	args := []string{}
+	args := []string{"--config", "/dev/null"}
 
 	if opts.OutputIndent != nil {
 		args = append(args, "--indent", fmt.Sprintf("%d", *opts.OutputIndent))
@@ -87,7 +87,7 @@ func decryptWithSops(ctx context.Context, encryptedData []byte, opts SopsDecrypt
 		inputType = "json"
 	}
 
-	args := []string{"decrypt", "--input-type", inputType, "--output-type", "json", "/dev/stdin"}
+	args := []string{"--config", "/dev/null", "decrypt", "--input-type", inputType, "--output-type", "json", "/dev/stdin"}
 	cmd := exec.CommandContext(ctx, sopsBinary, args...)
 	cmd.Stdin = bytes.NewReader(encryptedData)
 

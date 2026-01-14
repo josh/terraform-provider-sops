@@ -1,7 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
@@ -57,6 +60,79 @@ func testAccCheckEncryptedOutputIndentation(resourceName string, expectedIndent 
 			if !foundIndentedLine {
 				return fmt.Errorf("Expected to find lines with %d-space indentation, but didn't find any", expectedIndent)
 			}
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckEncryptedOutputUsesCorrectAge(resourceName string, expectedAge string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		output := rs.Primary.Attributes["output"]
+		if output == "" {
+			return fmt.Errorf("No output attribute found")
+		}
+
+		var sopsOutput map[string]interface{}
+		if err := json.Unmarshal([]byte(output), &sopsOutput); err != nil {
+			return fmt.Errorf("Failed to parse output JSON: %w", err)
+		}
+
+		sopsMetadata, ok := sopsOutput["sops"].(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("Output missing sops metadata")
+		}
+
+		ageList, ok := sopsMetadata["age"].([]interface{})
+		if !ok || len(ageList) == 0 {
+			return fmt.Errorf("Output missing age recipients")
+		}
+
+		firstAge := ageList[0].(map[string]interface{})
+		recipient := firstAge["recipient"].(string)
+
+		if recipient != expectedAge {
+			return fmt.Errorf("Encrypted output uses wrong age recipient. Expected %s, got %s", expectedAge, recipient)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckFieldIsEncrypted(resourceName string, fieldName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		output := rs.Primary.Attributes["output"]
+		if output == "" {
+			return fmt.Errorf("No output attribute found")
+		}
+
+		var sopsOutput map[string]interface{}
+		if err := json.Unmarshal([]byte(output), &sopsOutput); err != nil {
+			return fmt.Errorf("Failed to parse output JSON: %w", err)
+		}
+
+		fieldValue, ok := sopsOutput[fieldName]
+		if !ok {
+			return fmt.Errorf("Field %s not found in output", fieldName)
+		}
+
+		fieldStr, ok := fieldValue.(string)
+		if !ok {
+			return fmt.Errorf("Field %s is not a string", fieldName)
+		}
+
+		if !strings.HasPrefix(fieldStr, "ENC[") {
+			return fmt.Errorf("Field %s is not encrypted (expected ENC[ prefix), got: %s", fieldName, fieldStr)
 		}
 
 		return nil
@@ -605,6 +681,45 @@ func TestAccEncryptResource_RegexChange_ForcesReplacement(t *testing.T) {
 	})
 }
 
+func TestAccEncryptResource_ConfigIsolation(t *testing.T) {
+	tmpDir := t.TempDir()
+	conflictingConfig := `creation_rules:
+  - age: age1ql3z7hjy54pw3hyww5ayyfg7zqgvc7w3j2elw8zmrj2kg5sfn9aqmcac8p
+    unencrypted_suffix: _plain`
+	err := os.WriteFile(filepath.Join(tmpDir, ".sops.yaml"), []byte(conflictingConfig), 0644)
+	if err != nil {
+		t.Fatalf("Failed to create test .sops.yaml: %v", err)
+	}
+
+	origDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get current directory: %v", err)
+	}
+	defer func() {
+		if err := os.Chdir(origDir); err != nil {
+			t.Logf("Failed to change back to original directory: %v", err)
+		}
+	}()
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("Failed to change to temp directory: %v", err)
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEncryptResourceConfigForConfigIsolation(testAgePublicKeyResource),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("sops_encrypt.test", "output"),
+					testAccCheckEncryptedOutputUsesCorrectAge("sops_encrypt.test", testAgePublicKeyResource),
+					testAccCheckFieldIsEncrypted("sops_encrypt.test", "public_data_plain"),
+				),
+			},
+		},
+	})
+}
+
 func testAccEncryptResourceConfigWithUnencryptedSuffix(ageRecipient, suffix string) string {
 	return fmt.Sprintf(`
 resource "sops_encrypt" "test" {
@@ -629,4 +744,16 @@ resource "sops_encrypt" "test" {
   encrypted_regex = %q
 }
 `, ageRecipient, regex)
+}
+
+func testAccEncryptResourceConfigForConfigIsolation(ageRecipient string) string {
+	return fmt.Sprintf(`
+resource "sops_encrypt" "test" {
+  input = {
+    secret = "encrypted-value"
+    public_data_plain = "should-be-encrypted"
+  }
+  age_recipients = [%q]
+}
+`, ageRecipient)
 }
