@@ -691,18 +691,7 @@ func TestAccEncryptResource_ConfigIsolation(t *testing.T) {
 		t.Fatalf("Failed to create test .sops.yaml: %v", err)
 	}
 
-	origDir, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("Failed to get current directory: %v", err)
-	}
-	defer func() {
-		if err := os.Chdir(origDir); err != nil {
-			t.Logf("Failed to change back to original directory: %v", err)
-		}
-	}()
-	if err := os.Chdir(tmpDir); err != nil {
-		t.Fatalf("Failed to change to temp directory: %v", err)
-	}
+	t.Chdir(tmpDir)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccEncryptResourcePreCheck(t) },
