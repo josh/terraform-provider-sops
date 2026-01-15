@@ -109,7 +109,8 @@ data "sops_encrypt" "source" {
 }
 
 ephemeral "sops_decrypt" "test" {
-  input = data.sops_encrypt.source.output
+  input      = data.sops_encrypt.source.output
+  input_type = "json"
 }
 
 provider "echo" {
@@ -143,7 +144,8 @@ data "sops_encrypt" "source" {
 }
 
 ephemeral "sops_decrypt" "test" {
-  input = data.sops_encrypt.source.output
+  input      = data.sops_encrypt.source.output
+  input_type = "json"
 }
 
 provider "echo" {
@@ -172,7 +174,8 @@ data "sops_encrypt" "source" {
 }
 
 ephemeral "sops_decrypt" "test" {
-  input = data.sops_encrypt.source.output
+  input      = data.sops_encrypt.source.output
+  input_type = "json"
 }
 
 provider "echo" {

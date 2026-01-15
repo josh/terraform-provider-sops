@@ -87,7 +87,8 @@ data "sops_encrypt" "test" {
 }
 
 data "sops_decrypt" "test" {
-  input = data.sops_encrypt.test.output
+  input      = data.sops_encrypt.test.output
+  input_type = "json"
 }
 `
 }
@@ -110,7 +111,8 @@ data "sops_encrypt" "test" {
 }
 
 data "sops_decrypt" "test" {
-  input = data.sops_encrypt.test.output
+  input      = data.sops_encrypt.test.output
+  input_type = "json"
 }
 `
 }
@@ -148,7 +150,8 @@ data "sops_encrypt" "test" {
 }
 
 data "sops_decrypt" "test" {
-  input = data.sops_encrypt.test.output
+  input      = data.sops_encrypt.test.output
+  input_type = "json"
 }
 `
 }
@@ -215,13 +218,13 @@ func TestAccEncryptDecryptIntegration_YAMLEdgeCases(t *testing.T) {
 	})
 }
 
-func TestAccEncryptDecryptIntegration_DefaultInputTypeJSON(t *testing.T) {
+func TestAccEncryptDecryptIntegration_ExplicitInputTypeJSON(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccDecryptPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptDecryptIntegrationConfigDefaultInputType(testAgePublicKey),
+				Config: testAccEncryptDecryptIntegrationConfigExplicitInputType(testAgePublicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.sops_encrypt.test", "output"),
 					resource.TestCheckResourceAttrSet("data.sops_decrypt.test", "output.%"),
@@ -317,7 +320,7 @@ data "sops_decrypt" "test" {
 `
 }
 
-func testAccEncryptDecryptIntegrationConfigDefaultInputType(ageRecipient string) string {
+func testAccEncryptDecryptIntegrationConfigExplicitInputType(ageRecipient string) string {
 	return `
 provider "sops" {
   age_identity_value = "` + testAgeSecretKey + `"
@@ -331,7 +334,8 @@ data "sops_encrypt" "test" {
 }
 
 data "sops_decrypt" "test" {
-  input = data.sops_encrypt.test.output
+  input      = data.sops_encrypt.test.output
+  input_type = "json"
 }
 `
 }

@@ -84,7 +84,7 @@ type SopsDecryptOptions struct {
 func decryptWithSops(ctx context.Context, encryptedData []byte, opts SopsDecryptOptions) ([]byte, error) {
 	inputType := opts.InputType
 	if inputType == "" {
-		inputType = "json"
+		return nil, fmt.Errorf("input type is required")
 	}
 
 	args := []string{"--config", "/dev/null", "decrypt", "--input-type", inputType, "--output-type", "json", "/dev/stdin"}

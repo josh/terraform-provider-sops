@@ -40,8 +40,8 @@ func (d *DecryptDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 				Sensitive:           true,
 			},
 			"input_type": schema.StringAttribute{
-				MarkdownDescription: "The format of the encrypted input. Valid values are \"json\" or \"yaml\". Defaults to \"json\".",
-				Optional:            true,
+				MarkdownDescription: "The format of the encrypted input. Valid values are \"json\" or \"yaml\".",
+				Required:            true,
 			},
 			"output": schema.DynamicAttribute{
 				MarkdownDescription: "The decrypted data structure.",
@@ -96,12 +96,21 @@ func (d *DecryptDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		}
 	}
 
-	inputType := "json"
-	if !data.InputType.IsNull() && !data.InputType.IsUnknown() {
-		inputType = data.InputType.ValueString()
+	if data.InputType.IsNull() || data.InputType.IsUnknown() {
+		resp.Diagnostics.AddError(
+			"Missing Input Type",
+			"The \"input_type\" attribute is required.",
+		)
+		return
 	}
+
+	inputType := data.InputType.ValueString()
 	if inputType == "" {
-		inputType = "json"
+		resp.Diagnostics.AddError(
+			"Empty Input Type",
+			"The \"input_type\" attribute must not be empty.",
+		)
+		return
 	}
 
 	decryptedJSON, err := decryptWithSops(ctx, inputBytes, SopsDecryptOptions{
