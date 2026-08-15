@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -49,12 +50,22 @@ func (r *AgePublicKeyResource) Schema(ctx context.Context, req resource.SchemaRe
 				MarkdownDescription: "Version counter for `private_key_wo`. Increment this value to re-derive the public key after changing the private key.",
 				Optional:            true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.RequiresReplaceIf(
+						func(ctx context.Context, req planmodifier.Int64Request, resp *int64planmodifier.RequiresReplaceIfFuncResponse) {
+							// Removing the version trigger is not a key change.
+							resp.RequiresReplace = !req.PlanValue.IsNull()
+						},
+						"Replaces the resource when changed to a non-null value.",
+						"Replaces the resource when changed to a non-null value.",
+					),
 				},
 			},
 			"public_key": schema.StringAttribute{
 				MarkdownDescription: "Derived age public key (recipient) in `age1...` format.",
 				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 	}
@@ -103,10 +114,14 @@ func (r *AgePublicKeyResource) Read(ctx context.Context, req resource.ReadReques
 }
 
 func (r *AgePublicKeyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	resp.Diagnostics.AddError(
-		"Unexpected Update Call",
-		"This resource does not support updates. Changes to 'private_key_wo_version' should trigger replacement.",
-	)
+	var data AgePublicKeyResourceModel
+
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AgePublicKeyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
