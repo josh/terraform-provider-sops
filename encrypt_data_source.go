@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -51,6 +53,10 @@ func (d *EncryptDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 				ElementType:         types.StringType,
 				MarkdownDescription: "List of age recipients to encrypt the data for. Each recipient can decrypt the encrypted output with their corresponding age identity.",
 				Required:            true,
+				Validators: []validator.List{
+					listvalidator.SizeAtLeast(1),
+					listvalidator.ValueStringsAre(stringvalidator.LengthAtLeast(1)),
+				},
 			},
 			"output_type": schema.StringAttribute{
 				MarkdownDescription: "The output format for the encrypted data. Valid values are \"json\" or \"yaml\". Defaults to \"json\".",
