@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -335,4 +337,73 @@ data "sops_decrypt" "test" {
   input_type = "json"
 }
 `
+}
+
+func TestAccEncryptDecryptIntegration_NumberPrecision(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+provider "sops" {
+  age_identity_value = %q
+}
+
+data "sops_encrypt" "test" {
+  input = {
+    big_id   = 1234567890123456789
+    neg_id   = -9007199254740993
+    small    = 42
+    fraction = 1.5
+  }
+  age_recipients = [%q]
+}
+
+data "sops_decrypt" "test" {
+  input      = data.sops_encrypt.test.output
+  input_type = "json"
+}
+`, testAgeSecretKey, testAgePublicKey),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.sops_decrypt.test", "output.big_id", "1234567890123456789"),
+					resource.TestCheckResourceAttr("data.sops_decrypt.test", "output.neg_id", "-9007199254740993"),
+					resource.TestCheckResourceAttr("data.sops_decrypt.test", "output.small", "42"),
+					resource.TestCheckResourceAttr("data.sops_decrypt.test", "output.fraction", "1.5"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEncrypt_NumberRange(t *testing.T) {
+	for name, tc := range map[string]struct {
+		literal string
+		want    string
+	}{
+		"overflow":           {literal: "1e400", want: `number\s+overflow`},
+		"negative_overflow":  {literal: "-1e400", want: `number\s+overflow`},
+		"underflow":          {literal: "1e-400", want: `number\s+underflow`},
+		"negative_underflow": {literal: "-1e-400", want: `number\s+underflow`},
+	} {
+		t.Run(name, func(t *testing.T) {
+			resource.Test(t, resource.TestCase{
+				PreCheck:                 func() { testAccPreCheck(t) },
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Steps: []resource.TestStep{
+					{
+						Config: fmt.Sprintf(`
+data "sops_encrypt" "test" {
+  input = {
+    n = %s
+  }
+  age_recipients = [%q]
+}
+`, tc.literal, testAgePublicKey),
+						ExpectError: regexp.MustCompile(tc.want),
+					},
+				},
+			})
+		})
+	}
 }
