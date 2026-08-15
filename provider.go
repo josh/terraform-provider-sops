@@ -75,7 +75,6 @@ func (p *SopsProvider) EphemeralResources(ctx context.Context) []func() ephemera
 	return []func() ephemeral.EphemeralResource{
 		NewDecryptEphemeralResource,
 		NewAgePrivateKeyEphemeralResource,
-		NewTestDynamicEphemeralResource,
 	}
 }
 
