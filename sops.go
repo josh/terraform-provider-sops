@@ -10,6 +10,14 @@ import (
 	"strings"
 )
 
+func formatSopsStderr(stderr string) string {
+	stderr = strings.TrimSpace(stderr)
+	if stderr == "" {
+		return ""
+	}
+	return ": " + stderr
+}
+
 type SopsEncryptOptions struct {
 	AgeRecipients     []string
 	OutputType        string
@@ -69,7 +77,7 @@ func encryptWithSops(ctx context.Context, input map[string]interface{}, opts Sop
 	cmd.Stderr = &stderr
 
 	if err := cmd.Run(); err != nil {
-		return nil, fmt.Errorf("sops encrypt failed: %s", stderr.String())
+		return nil, fmt.Errorf("sops encrypt failed: %w%s", err, formatSopsStderr(stderr.String()))
 	}
 
 	return stdout.Bytes(), nil
@@ -103,7 +111,7 @@ func decryptWithSops(ctx context.Context, encryptedData []byte, opts SopsDecrypt
 	cmd.Stderr = &stderr
 
 	if err := cmd.Run(); err != nil {
-		return nil, fmt.Errorf("sops decrypt failed: %s", stderr.String())
+		return nil, fmt.Errorf("sops decrypt failed: %w%s", err, formatSopsStderr(stderr.String()))
 	}
 
 	return stdout.Bytes(), nil
