@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -57,14 +58,16 @@ func convertAttrValueToGo(val attr.Value) (interface{}, error) {
 		return v.ValueString(), nil
 	case types.Number:
 		bigFloat := v.ValueBigFloat()
-		f, accuracy := bigFloat.Float64()
-		if accuracy == big.Below && f == 0 {
-			return nil, fmt.Errorf("number underflow: value too small to represent as float64")
-		}
-		if accuracy == big.Above && (f == math.Inf(1) || f == math.Inf(-1)) {
+		// sops cannot represent numbers outside the float64 range; rejecting
+		// them also keeps the exact decimal expansion below bounded.
+		f, _ := bigFloat.Float64()
+		if math.IsInf(f, 0) {
 			return nil, fmt.Errorf("number overflow: value too large to represent as float64")
 		}
-		return f, nil
+		if f == 0 && bigFloat.Sign() != 0 {
+			return nil, fmt.Errorf("number underflow: value too small to represent as float64")
+		}
+		return json.Number(bigFloat.Text('f', -1)), nil
 	case types.Bool:
 		return v.ValueBool(), nil
 	case types.Object:
@@ -127,8 +130,11 @@ func convertAttrValueToGo(val attr.Value) (interface{}, error) {
 }
 
 func unmarshalToDynamicValue(jsonBytes []byte) (types.Dynamic, error) {
+	decoder := json.NewDecoder(bytes.NewReader(jsonBytes))
+	decoder.UseNumber()
+
 	var raw interface{}
-	if err := json.Unmarshal(jsonBytes, &raw); err != nil {
+	if err := decoder.Decode(&raw); err != nil {
 		return types.DynamicNull(), fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
 
@@ -148,6 +154,13 @@ func convertGoValueToAttr(val interface{}) (attr.Value, error) {
 	switch v := val.(type) {
 	case string:
 		return types.StringValue(v), nil
+	case json.Number:
+		// 512 bits matches Terraform's own number precision.
+		parsed, _, err := big.ParseFloat(v.String(), 10, 512, big.ToNearestEven)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse JSON number %q: %w", v.String(), err)
+		}
+		return types.NumberValue(parsed), nil
 	case float64:
 		return types.NumberValue(big.NewFloat(v)), nil
 	case bool:

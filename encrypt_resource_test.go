@@ -324,7 +324,7 @@ func TestAccEncryptResource_InvalidInputTypes(t *testing.T) {
 			},
 			{
 				Config:      testAccEncryptResourceConfigInvalidNumber(testAgePublicKey),
-				ExpectError: regexp.MustCompile(`Input must be a map/object, got float64\. SOPS can only encrypt JSON\s+objects\.`),
+				ExpectError: regexp.MustCompile(`Input must be a map/object, got json\.Number\. SOPS can only encrypt JSON\s+objects\.`),
 			},
 		},
 	})
