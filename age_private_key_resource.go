@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -79,17 +78,15 @@ func (r *AgePrivateKeyResource) Delete(ctx context.Context, req resource.DeleteR
 }
 
 func (r *AgePrivateKeyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	privateKey := strings.TrimSpace(req.ID)
-
-	publicKey, err := deriveAgePublicKey(privateKey)
+	identity, err := parseAgeIdentity(req.ID)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Invalid Age Private Key",
-			fmt.Sprintf("The import ID must be an age private key in AGE-SECRET-KEY-1... format. Failed to derive public key: %s", err),
+			fmt.Sprintf("The import ID must be an age private key in AGE-SECRET-KEY-1... format or age-keygen file content. %s", err),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("private_key"), privateKey)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("public_key"), publicKey)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("private_key"), identity.String())...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("public_key"), identity.Recipient().String())...)
 }
