@@ -17,8 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
 
-const testAgePublicKeyResource = "age1j7ce327ke8t905hr4ve97xh4jr5ujauq59nxxkr3tnz9pty78p6q26hnd0"
-
 func testAccEncryptResourcePreCheck(t *testing.T) {
 	testAccPreCheck(t)
 }
@@ -145,7 +143,7 @@ func TestAccEncryptResource_Basic(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptResourceConfigBasic(testAgePublicKeyResource),
+				Config: testAccEncryptResourceConfigBasic(testAgePublicKey),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"sops_encrypt.test",
@@ -167,7 +165,7 @@ func TestAccEncryptResource_InputChange_ForcesReplacement(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptResourceConfigUpdate("initial-value", testAgePublicKeyResource),
+				Config: testAccEncryptResourceConfigUpdate("initial-value", testAgePublicKey),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"sops_encrypt.test",
@@ -177,7 +175,7 @@ func TestAccEncryptResource_InputChange_ForcesReplacement(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccEncryptResourceConfigUpdate("updated-value", testAgePublicKeyResource),
+				Config: testAccEncryptResourceConfigUpdate("updated-value", testAgePublicKey),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(
@@ -199,7 +197,7 @@ func TestAccEncryptResource_AgeChange_ForcesReplacement(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptResourceConfigUpdate("test-value", testAgePublicKeyResource),
+				Config: testAccEncryptResourceConfigUpdate("test-value", testAgePublicKey),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"sops_encrypt.test",
@@ -232,7 +230,7 @@ func TestAccEncryptResource_AgeListModification_ForcesReplacement(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEncryptResourceConfigMultipleRecipients(
-					testAgePublicKeyResource,
+					testAgePublicKey,
 					testAgePublicKeyAlternate,
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -244,7 +242,7 @@ func TestAccEncryptResource_AgeListModification_ForcesReplacement(t *testing.T) 
 				},
 			},
 			{
-				Config: testAccEncryptResourceConfigBasic(testAgePublicKeyResource),
+				Config: testAccEncryptResourceConfigBasic(testAgePublicKey),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(
@@ -264,7 +262,7 @@ func TestAccEncryptResource_NestedStructure(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptResourceConfigNested(testAgePublicKeyResource),
+				Config: testAccEncryptResourceConfigNested(testAgePublicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("sops_encrypt.test", "output"),
 				),
@@ -279,7 +277,7 @@ func TestAccEncryptResource_MultipleRecipients(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptResourceConfigMultipleRecipients(testAgePublicKeyResource, testAgePublicKeyResource),
+				Config: testAccEncryptResourceConfigMultipleRecipients(testAgePublicKey, testAgePublicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("sops_encrypt.test", "output"),
 				),
@@ -294,7 +292,7 @@ func TestAccEncryptResource_OutputTypeYAML(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptResourceConfigWithOutputType(testAgePublicKeyResource, "yaml"),
+				Config: testAccEncryptResourceConfigWithOutputType(testAgePublicKey, "yaml"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"sops_encrypt.test",
@@ -317,15 +315,15 @@ func TestAccEncryptResource_InvalidInputTypes(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccEncryptResourceConfigInvalidArray(testAgePublicKeyResource),
+				Config:      testAccEncryptResourceConfigInvalidArray(testAgePublicKey),
 				ExpectError: regexp.MustCompile(`Input must be a map/object, got \[\]interface \{\}\. SOPS can only encrypt JSON\s+objects\.`),
 			},
 			{
-				Config:      testAccEncryptResourceConfigInvalidString(testAgePublicKeyResource),
+				Config:      testAccEncryptResourceConfigInvalidString(testAgePublicKey),
 				ExpectError: regexp.MustCompile(`Input must be a map/object, got string\. SOPS can only encrypt JSON\s+objects\.`),
 			},
 			{
-				Config:      testAccEncryptResourceConfigInvalidNumber(testAgePublicKeyResource),
+				Config:      testAccEncryptResourceConfigInvalidNumber(testAgePublicKey),
 				ExpectError: regexp.MustCompile(`Input must be a map/object, got float64\. SOPS can only encrypt JSON\s+objects\.`),
 			},
 		},
@@ -433,7 +431,7 @@ func TestAccEncryptResource_UnknownInput_FromResource(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptResourceConfigUnknownInput(testAgePublicKeyResource),
+				Config: testAccEncryptResourceConfigUnknownInput(testAgePublicKey),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectUnknownValue(
@@ -476,7 +474,7 @@ func TestAccEncryptResource_OutputIndent(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptResourceConfigWithOutputIndent(testAgePublicKeyResource, 2),
+				Config: testAccEncryptResourceConfigWithOutputIndent(testAgePublicKey, 2),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"sops_encrypt.test",
@@ -500,7 +498,7 @@ func TestAccEncryptResource_OutputIndentChange_ForcesReplacement(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptResourceConfigWithOutputIndent(testAgePublicKeyResource, 0),
+				Config: testAccEncryptResourceConfigWithOutputIndent(testAgePublicKey, 0),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"sops_encrypt.test",
@@ -510,7 +508,7 @@ func TestAccEncryptResource_OutputIndentChange_ForcesReplacement(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccEncryptResourceConfigWithOutputIndent(testAgePublicKeyResource, 2),
+				Config: testAccEncryptResourceConfigWithOutputIndent(testAgePublicKey, 2),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(
@@ -530,7 +528,7 @@ func TestAccEncryptResource_OutputIndentWithYAML(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptResourceConfigWithOutputTypeAndIndent(testAgePublicKeyResource, "yaml", 4),
+				Config: testAccEncryptResourceConfigWithOutputTypeAndIndent(testAgePublicKey, "yaml", 4),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"sops_encrypt.test",
@@ -554,7 +552,7 @@ func TestAccEncryptResource_OutputIndentCompact(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptResourceConfigWithOutputIndent(testAgePublicKeyResource, 0),
+				Config: testAccEncryptResourceConfigWithOutputIndent(testAgePublicKey, 0),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"sops_encrypt.test",
@@ -604,7 +602,7 @@ func TestAccEncryptResource_UnencryptedSuffix(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptResourceConfigWithUnencryptedSuffix(testAgePublicKeyResource, "_unencrypted"),
+				Config: testAccEncryptResourceConfigWithUnencryptedSuffix(testAgePublicKey, "_unencrypted"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"sops_encrypt.test",
@@ -627,7 +625,7 @@ func TestAccEncryptResource_SuffixChange_ForcesReplacement(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptResourceConfigWithUnencryptedSuffix(testAgePublicKeyResource, "_unencrypted"),
+				Config: testAccEncryptResourceConfigWithUnencryptedSuffix(testAgePublicKey, "_unencrypted"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"sops_encrypt.test",
@@ -637,7 +635,7 @@ func TestAccEncryptResource_SuffixChange_ForcesReplacement(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccEncryptResourceConfigWithUnencryptedSuffix(testAgePublicKeyResource, "_plain"),
+				Config: testAccEncryptResourceConfigWithUnencryptedSuffix(testAgePublicKey, "_plain"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(
@@ -657,7 +655,7 @@ func TestAccEncryptResource_RegexChange_ForcesReplacement(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptResourceConfigWithEncryptedRegex(testAgePublicKeyResource, "^secret_"),
+				Config: testAccEncryptResourceConfigWithEncryptedRegex(testAgePublicKey, "^secret_"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"sops_encrypt.test",
@@ -667,7 +665,7 @@ func TestAccEncryptResource_RegexChange_ForcesReplacement(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccEncryptResourceConfigWithEncryptedRegex(testAgePublicKeyResource, "^password_"),
+				Config: testAccEncryptResourceConfigWithEncryptedRegex(testAgePublicKey, "^password_"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(
@@ -698,10 +696,10 @@ func TestAccEncryptResource_ConfigIsolation(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptResourceConfigForConfigIsolation(testAgePublicKeyResource),
+				Config: testAccEncryptResourceConfigForConfigIsolation(testAgePublicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("sops_encrypt.test", "output"),
-					testAccCheckEncryptedOutputUsesCorrectAge("sops_encrypt.test", testAgePublicKeyResource),
+					testAccCheckEncryptedOutputUsesCorrectAge("sops_encrypt.test", testAgePublicKey),
 					testAccCheckFieldIsEncrypted("sops_encrypt.test", "public_data_plain"),
 				),
 			},

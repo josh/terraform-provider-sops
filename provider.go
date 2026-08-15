@@ -66,12 +66,15 @@ func (p *SopsProvider) Configure(ctx context.Context, req provider.ConfigureRequ
 func (p *SopsProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewEncryptResource,
+		NewAgePrivateKeyResource,
+		NewAgePublicKeyResource,
 	}
 }
 
 func (p *SopsProvider) EphemeralResources(ctx context.Context) []func() ephemeral.EphemeralResource {
 	return []func() ephemeral.EphemeralResource{
 		NewDecryptEphemeralResource,
+		NewAgePrivateKeyEphemeralResource,
 		NewTestDynamicEphemeralResource,
 	}
 }
@@ -80,6 +83,7 @@ func (p *SopsProvider) DataSources(ctx context.Context) []func() datasource.Data
 	return []func() datasource.DataSource{
 		NewDecryptDataSource,
 		NewEncryptDataSource,
+		NewAgePublicKeyDataSource,
 	}
 }
 

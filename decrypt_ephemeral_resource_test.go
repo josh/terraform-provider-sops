@@ -11,9 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-const testAgePublicKeyEphemeral = "age1j7ce327ke8t905hr4ve97xh4jr5ujauq59nxxkr3tnz9pty78p6q26hnd0"
-const testAgeSecretKeyEphemeral = "AGE-SECRET-KEY-18Z8D6LS5LCAZWERTYMK87NQ0N0ZEX5T50NZ9Q5XVPES2VRPWTC4SYAY5AT"
-
 func testAccDecryptEphemeralPreCheck(t *testing.T) {
 	testAccPreCheck(t)
 }
@@ -27,7 +24,7 @@ func TestAccDecryptEphemeralResource_Basic(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactoriesWithEcho,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDecryptEphemeralResourceConfigBasic(testAgePublicKeyEphemeral),
+				Config: testAccDecryptEphemeralResourceConfigBasic(testAgePublicKey),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"echo.test",
@@ -54,7 +51,7 @@ func TestAccDecryptEphemeralResource_NestedStructure(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactoriesWithEcho,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDecryptEphemeralResourceConfigNested(testAgePublicKeyEphemeral),
+				Config: testAccDecryptEphemeralResourceConfigNested(testAgePublicKey),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"echo.test",
@@ -81,7 +78,7 @@ func TestAccDecryptEphemeralResource_WithAgeIdentities(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactoriesWithEcho,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDecryptEphemeralResourceConfigWithAgeIdentities(testAgePublicKeyEphemeral),
+				Config: testAccDecryptEphemeralResourceConfigWithAgeIdentities(testAgePublicKey),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"echo.test",
@@ -118,7 +115,7 @@ provider "echo" {
 }
 
 resource "echo" "test" {}
-`, testAgeSecretKeyEphemeral, ageRecipient)
+`, testAgeSecretKey, ageRecipient)
 }
 
 func testAccDecryptEphemeralResourceConfigNested(ageRecipient string) string {
@@ -153,7 +150,7 @@ provider "echo" {
 }
 
 resource "echo" "test" {}
-`, testAgeSecretKeyEphemeral, ageRecipient)
+`, testAgeSecretKey, ageRecipient)
 }
 
 func testAccDecryptEphemeralResourceConfigWithAgeIdentities(ageRecipient string) string {
@@ -183,7 +180,7 @@ provider "echo" {
 }
 
 resource "echo" "test" {}
-`, testAgeSecretKeyEphemeral, ageRecipient)
+`, testAgeSecretKey, ageRecipient)
 }
 
 func TestAccDecryptEphemeralResource_InputType(t *testing.T) {
@@ -195,7 +192,7 @@ func TestAccDecryptEphemeralResource_InputType(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactoriesWithEcho,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDecryptEphemeralResourceConfigInputType(testAgePublicKeyEphemeral),
+				Config: testAccDecryptEphemeralResourceConfigInputType(testAgePublicKey),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"echo.test",
@@ -231,5 +228,5 @@ provider "echo" {
 }
 
 resource "echo" "test" {}
-`, testAgeSecretKeyEphemeral, ageRecipient)
+`, testAgeSecretKey, ageRecipient)
 }
