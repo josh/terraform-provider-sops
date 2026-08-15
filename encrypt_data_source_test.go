@@ -8,15 +8,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-const testAgeRecipient = "age1j7ce327ke8t905hr4ve97xh4jr5ujauq59nxxkr3tnz9pty78p6q26hnd0"
-
 func TestAccEncryptDataSource_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptDataSourceConfigBasic(testAgeRecipient),
+				Config: testAccEncryptDataSourceConfigBasic(testAgePublicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.sops_encrypt.test", "output"),
 				),
@@ -31,7 +29,7 @@ func TestAccEncryptDataSource_NestedStructure(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptDataSourceConfigNested(testAgeRecipient),
+				Config: testAccEncryptDataSourceConfigNested(testAgePublicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.sops_encrypt.test", "output"),
 				),
@@ -46,7 +44,7 @@ func TestAccEncryptDataSource_MultipleRecipients(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptDataSourceConfigMultipleRecipients(testAgeRecipient, testAgeRecipient),
+				Config: testAccEncryptDataSourceConfigMultipleRecipients(testAgePublicKey, testAgePublicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.sops_encrypt.test", "output"),
 				),
@@ -61,7 +59,7 @@ func TestAccEncryptDataSource_EdgeCases(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptDataSourceConfigEdgeCases(testAgeRecipient),
+				Config: testAccEncryptDataSourceConfigEdgeCases(testAgePublicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.sops_encrypt.test", "output"),
 				),
@@ -76,7 +74,7 @@ func TestAccEncryptDataSource_OutputTypeYAML(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptDataSourceConfigWithOutputType(testAgeRecipient, "yaml"),
+				Config: testAccEncryptDataSourceConfigWithOutputType(testAgePublicKey, "yaml"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.sops_encrypt.test", "output"),
 					resource.TestCheckResourceAttr("data.sops_encrypt.test", "output_type", "yaml"),
@@ -92,15 +90,15 @@ func TestAccEncryptDataSource_InvalidInputTypes(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccEncryptDataSourceConfigInvalidArray(testAgeRecipient),
+				Config:      testAccEncryptDataSourceConfigInvalidArray(testAgePublicKey),
 				ExpectError: regexp.MustCompile(`Input must be a map/object, got \[\]interface \{\}\. SOPS can only encrypt JSON\s+objects\.`),
 			},
 			{
-				Config:      testAccEncryptDataSourceConfigInvalidString(testAgeRecipient),
+				Config:      testAccEncryptDataSourceConfigInvalidString(testAgePublicKey),
 				ExpectError: regexp.MustCompile(`Input must be a map/object, got string\. SOPS can only encrypt JSON\s+objects\.`),
 			},
 			{
-				Config:      testAccEncryptDataSourceConfigInvalidNumber(testAgeRecipient),
+				Config:      testAccEncryptDataSourceConfigInvalidNumber(testAgePublicKey),
 				ExpectError: regexp.MustCompile(`Input must be a map/object, got float64\. SOPS can only encrypt JSON\s+objects\.`),
 			},
 		},
@@ -221,7 +219,7 @@ func TestAccEncryptDataSource_OutputIndent(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptDataSourceConfigWithOutputIndent(testAgeRecipient, 2),
+				Config: testAccEncryptDataSourceConfigWithOutputIndent(testAgePublicKey, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.sops_encrypt.test", "output"),
 					resource.TestCheckResourceAttr("data.sops_encrypt.test", "output_indent", "2"),
@@ -238,7 +236,7 @@ func TestAccEncryptDataSource_OutputIndentWithYAML(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptDataSourceConfigWithOutputTypeAndIndent(testAgeRecipient, "yaml", 4),
+				Config: testAccEncryptDataSourceConfigWithOutputTypeAndIndent(testAgePublicKey, "yaml", 4),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.sops_encrypt.test", "output"),
 					resource.TestCheckResourceAttr("data.sops_encrypt.test", "output_type", "yaml"),
@@ -255,7 +253,7 @@ func TestAccEncryptDataSource_OutputIndentCompact(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptDataSourceConfigWithOutputIndent(testAgeRecipient, 0),
+				Config: testAccEncryptDataSourceConfigWithOutputIndent(testAgePublicKey, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.sops_encrypt.test", "output"),
 					resource.TestCheckResourceAttr("data.sops_encrypt.test", "output_indent", "0"),
@@ -298,7 +296,7 @@ func TestAccEncryptDataSource_UnencryptedSuffix(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptDataSourceConfigWithUnencryptedSuffix(testAgeRecipient, "_unencrypted"),
+				Config: testAccEncryptDataSourceConfigWithUnencryptedSuffix(testAgePublicKey, "_unencrypted"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.sops_encrypt.test", "output"),
 					resource.TestCheckResourceAttr("data.sops_encrypt.test", "unencrypted_suffix", "_unencrypted"),
@@ -314,7 +312,7 @@ func TestAccEncryptDataSource_EncryptedSuffix(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptDataSourceConfigWithEncryptedSuffix(testAgeRecipient, "_secret"),
+				Config: testAccEncryptDataSourceConfigWithEncryptedSuffix(testAgePublicKey, "_secret"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.sops_encrypt.test", "output"),
 					resource.TestCheckResourceAttr("data.sops_encrypt.test", "encrypted_suffix", "_secret"),
@@ -330,7 +328,7 @@ func TestAccEncryptDataSource_UnencryptedRegex(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptDataSourceConfigWithUnencryptedRegex(testAgeRecipient, "^public_"),
+				Config: testAccEncryptDataSourceConfigWithUnencryptedRegex(testAgePublicKey, "^public_"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.sops_encrypt.test", "output"),
 					resource.TestCheckResourceAttr("data.sops_encrypt.test", "unencrypted_regex", "^public_"),
@@ -346,7 +344,7 @@ func TestAccEncryptDataSource_EncryptedRegex(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptDataSourceConfigWithEncryptedRegex(testAgeRecipient, "^secret_"),
+				Config: testAccEncryptDataSourceConfigWithEncryptedRegex(testAgePublicKey, "^secret_"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.sops_encrypt.test", "output"),
 					resource.TestCheckResourceAttr("data.sops_encrypt.test", "encrypted_regex", "^secret_"),

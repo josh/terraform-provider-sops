@@ -45,3 +45,27 @@ func (v dynamicObjectValidator) ValidateDynamic(ctx context.Context, req validat
 		return
 	}
 }
+
+type ageIdentityValidator struct{}
+
+func (v ageIdentityValidator) Description(ctx context.Context) string {
+	return "value must be an age private key in AGE-SECRET-KEY-1... format"
+}
+
+func (v ageIdentityValidator) MarkdownDescription(ctx context.Context) string {
+	return "value must be an age private key in `AGE-SECRET-KEY-1...` format"
+}
+
+func (v ageIdentityValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	if _, err := deriveAgePublicKey(req.ConfigValue.ValueString()); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid Age Private Key",
+			fmt.Sprintf("Failed to derive public key: %s", err),
+		)
+	}
+}
