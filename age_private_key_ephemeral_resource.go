@@ -28,7 +28,7 @@ func (r *AgePrivateKeyEphemeralResource) Metadata(_ context.Context, req ephemer
 
 func (r *AgePrivateKeyEphemeralResource) Schema(_ context.Context, _ ephemeral.SchemaRequest, resp *ephemeral.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Generates an age X25519 key pair without storing it in Terraform state. A new key pair is generated on every plan and apply, so the private key must be written to a write-only argument of a managed resource in the same configuration to be retained. To persist only the public key in state, pass the private key to the `sops_age_public_key` resource's write-only `private_key_wo` argument. Requires Terraform 1.10 or later.",
+		MarkdownDescription: "Generates an age X25519 key pair without storing it in Terraform state. A new key pair is generated on every plan and apply, so the private key must be written to a write-only argument of a managed resource in the same configuration to be retained. To persist only the public key in state, pass the private key to the `sops_age_public_key` resource's write-only `private_key_wo` argument. Requires Terraform 1.10 or later; the `sops_age_public_key` and write-only-argument flow requires Terraform 1.11 or later.",
 
 		Attributes: map[string]schema.Attribute{
 			"private_key": schema.StringAttribute{
