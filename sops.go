@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -83,6 +84,19 @@ func encryptWithSops(ctx context.Context, input map[string]interface{}, opts Sop
 	return stdout.Bytes(), nil
 }
 
+func expandTilde(path string) (string, error) {
+	if path != "~" && !strings.HasPrefix(path, "~/") {
+		return path, nil
+	}
+
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("failed to determine home directory: %w", err)
+	}
+
+	return filepath.Join(home, strings.TrimPrefix(path, "~")), nil
+}
+
 type SopsDecryptOptions struct {
 	AgeIdentityPath  string
 	AgeIdentityValue string
@@ -103,7 +117,17 @@ func decryptWithSops(ctx context.Context, encryptedData []byte, opts SopsDecrypt
 	if opts.AgeIdentityValue != "" {
 		cmd.Env = append(cmd.Env, "SOPS_AGE_KEY="+opts.AgeIdentityValue)
 	} else if opts.AgeIdentityPath != "" {
-		cmd.Env = append(cmd.Env, "SOPS_AGE_KEY_FILE="+opts.AgeIdentityPath)
+		identityPath, err := expandTilde(opts.AgeIdentityPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to resolve age identity file path %q: %w", opts.AgeIdentityPath, err)
+		}
+		if _, err := os.Stat(identityPath); err != nil {
+			if os.IsNotExist(err) {
+				return nil, fmt.Errorf("age identity file not found: %s", identityPath)
+			}
+			return nil, fmt.Errorf("failed to access age identity file %s: %w", identityPath, err)
+		}
+		cmd.Env = append(cmd.Env, "SOPS_AGE_KEY_FILE="+identityPath)
 	}
 
 	var stdout, stderr bytes.Buffer
