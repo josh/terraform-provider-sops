@@ -9,18 +9,8 @@ permissions:
 
 jobs:
   test:
-    name: test (terraform ${{ matrix.terraform }}, sops ${{ matrix.sops }})
     runs-on: ubuntu-amd64
     timeout-minutes: 15
-
-    strategy:
-      fail-fast: false
-      matrix:
-        terraform:
-          - "1.14"
-          - "1.15"
-        sops:
-          - "3.13.3"
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -32,13 +22,13 @@ jobs:
 
       - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
         with:
-          terraform_version: ${{ matrix.terraform }}.*
+          terraform_version: 1.17.1
           terraform_wrapper: false
 
       - name: Install SOPS
         run: |
-          curl -LO https://github.com/getsops/sops/releases/download/v${{ matrix.sops }}/sops-v${{ matrix.sops }}.linux.amd64
-          sudo mv sops-v${{ matrix.sops }}.linux.amd64 /usr/local/bin/sops
+          curl -LO https://github.com/getsops/sops/releases/download/v3.13.3/sops-v3.13.3.linux.amd64
+          sudo mv sops-v3.13.3.linux.amd64 /usr/local/bin/sops
           sudo chmod +x /usr/local/bin/sops
 
       - run: |
