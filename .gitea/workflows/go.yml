@@ -12,6 +12,12 @@ jobs:
     runs-on: ubuntu-amd64
     timeout-minutes: 15
 
+    env:
+      # renovate: datasource=github-releases depName=hashicorp/terraform extractVersion=^v(?<version>.+)$
+      TERRAFORM_VERSION: "1.17.1"
+      # renovate: datasource=github-releases depName=getsops/sops extractVersion=^v(?<version>.+)$
+      SOPS_VERSION: "3.13.3"
+
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -22,13 +28,13 @@ jobs:
 
       - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
         with:
-          terraform_version: 1.17.1
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
           terraform_wrapper: false
 
       - name: Install SOPS
         run: |
-          curl -LO https://github.com/getsops/sops/releases/download/v3.13.3/sops-v3.13.3.linux.amd64
-          sudo mv sops-v3.13.3.linux.amd64 /usr/local/bin/sops
+          curl -LO "https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux.amd64"
+          sudo mv "sops-v${SOPS_VERSION}.linux.amd64" /usr/local/bin/sops
           sudo chmod +x /usr/local/bin/sops
 
       - run: |
