@@ -1,8 +1,8 @@
 name: Go
 
 on:
-  pull_request:
   push:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -10,7 +10,7 @@ permissions:
 jobs:
   test:
     name: test (terraform ${{ matrix.terraform }}, sops ${{ matrix.sops }})
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-amd64
     timeout-minutes: 15
 
     strategy:

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "rebaseWhen": "behind-base-branch",
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["patch", "minor", "digest", "pinDigest"],
+      "assignees": ["merge-bot"]
+    },
+    {
+      "matchPackageNames": ["github.com/hashicorp/terraform-plugin-*"],
+      "groupName": "terraform-plugin"
+    }
+  ]
+}
